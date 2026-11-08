@@ -18,6 +18,37 @@ if game.GameId == 1511883870 then
 	if game.PlaceId == 4616652839 then
 		game.Workspace:WaitForChild("Camera"):WaitForChild("startup")
 		local spins = player.statz.spins.Value
+
+		--status: spins used this session, and in total over every rollback (kept in Qustah/rellauto.json)
+		local HttpService = game:GetService("HttpService")
+		local STATS_FILE = "Qustah/rellauto.json"
+		local startSpins = player.statz.spins.Value
+		local stats = { total = 0, rollbacks = 0 }
+		pcall(function()
+			if isfile and isfile(STATS_FILE) then
+				local saved = HttpService:JSONDecode(readfile(STATS_FILE))
+				stats.total = tonumber(saved.total) or 0
+				stats.rollbacks = tonumber(saved.rollbacks) or 0
+			end
+		end)
+		local function saveStats()
+			pcall(function()
+				if isfolder and not isfolder("Qustah") then makefolder("Qustah") end
+				writefile(STATS_FILE, HttpService:JSONEncode(stats))
+			end)
+		end
+		local function usedThisSession()
+			return math.max(0, startSpins - player.statz.spins.Value)
+		end
+		-- (counted once: the spin loops send the rollback more than once)
+		local rolledBack = false
+		local function countRollback()
+			if rolledBack then return end
+			rolledBack = true
+			stats.total = stats.total + usedThisSession()
+			stats.rollbacks = stats.rollbacks + 1
+			saveStats()
+		end
 		
 		--spin slot 1
 		game:GetService('RunService').Stepped:connect(function()
@@ -43,6 +74,7 @@ if game.GameId == 1511883870 then
 					player.startevent:FireServer(unpack(args))
 				end
 			else
+				countRollback()
 				player.startevent:FireServer("band", "\128")
 				wait()
 				game:GetService('TeleportService'):Teleport(game.PlaceId, player)
@@ -73,6 +105,7 @@ if game.GameId == 1511883870 then
 					player.startevent:FireServer(unpack(args))
 				end
 			else
+				countRollback()
 				player.startevent:FireServer("band", "\128")
 				wait()
 				game:GetService('TeleportService'):Teleport(game.PlaceId, player)
@@ -104,6 +137,7 @@ if game.GameId == 1511883870 then
 						player.startevent:FireServer(unpack(args))
 					end
 				else
+					countRollback()
 					player.startevent:FireServer("band", "\128")
 					wait()
 					game:GetService('TeleportService'):Teleport(game.PlaceId, player)
@@ -136,6 +170,7 @@ if game.GameId == 1511883870 then
 						player.startevent:FireServer(unpack(args))
 					end
 				else
+					countRollback()
 					player.startevent:FireServer("band", "\128")
 					wait()
 					game:GetService('TeleportService'):Teleport(game.PlaceId, player)
@@ -299,6 +334,7 @@ if game.GameId == 1511883870 then
 		RSN.TextSize = 18
 		RSN.MouseButton1Click:connect(function()
 			RSN.BackgroundColor3 = Color3.new(0.3, 0.8, 0.3)
+			countRollback()
 			game.Players.LocalPlayer.startevent:FireServer("band", "\128")
 			wait()
 			game:GetService("TeleportService"):Teleport(game.PlaceId, player)
@@ -562,6 +598,104 @@ if game.GameId == 1511883870 then
 			CDLTC.Text = "Copy Discord Link to Clipboard"
 		end)
 		
+		--Status (on top: the sections above move down under it)
+		local STATUS_HEIGHT = 210
+		local listHeight = ScrollingFrame.AbsoluteSize.Y > 0 and ScrollingFrame.AbsoluteSize.Y or 250
+		local canvasHeight = listHeight * 1.1
+		for _, item in ipairs(ScrollingFrame:GetChildren()) do
+			if item:IsA("GuiObject") then
+				local y = item.Position.Y.Scale * canvasHeight + item.Position.Y.Offset
+				item.Position = UDim2.new(item.Position.X.Scale, item.Position.X.Offset, 0, y + STATUS_HEIGHT)
+			end
+		end
+		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, canvasHeight + STATUS_HEIGHT)
+
+		local StatusL = Instance.new("ImageLabel")
+		StatusL.Name = "StatusL"
+		StatusL.Parent = ScrollingFrame
+		StatusL.BackgroundColor3 = Color3.new(1, 1, 1)
+		StatusL.BackgroundTransparency = 1
+		StatusL.Position = UDim2.new(0, 1, 0, 1)
+		StatusL.Size = UDim2.new(0, 230, 0, 30)
+		StatusL.Image = "rbxassetid://4823762651"
+		StatusL.ImageColor3 = Color3.new(0, 0, 0)
+		StatusL.ZIndex = 2
+
+		local StatusLabel = Instance.new("TextLabel")
+		StatusLabel.Name = "StatusLabel"
+		StatusLabel.Parent = StatusL
+		StatusLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+		StatusLabel.BackgroundTransparency = 1
+		StatusLabel.Position = UDim2.new(0, 0, 0.1, 0)
+		StatusLabel.Size = UDim2.new(0, 250, 0, 20)
+		StatusLabel.Font = Enum.Font.GothamBlack
+		StatusLabel.Text = "Status"
+		StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+		StatusLabel.TextSize = 15
+		StatusLabel.TextWrapped = false
+		StatusLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
+		StatusLabel.ZIndex = 3
+
+		-- one line of the status (same look as the Credits lines)
+		local function statusLine(index)
+			local label = Instance.new("TextLabel")
+			label.Name = "StatusLine" .. index
+			label.Parent = ScrollingFrame
+			label.BackgroundColor3 = Color3.new(1, 1, 1)
+			label.BackgroundTransparency = 1
+			label.Position = UDim2.new(0, 0, 0, 30 + (index - 1) * 22)
+			label.Size = UDim2.new(0, 230, 0, 20)
+			label.Font = Enum.Font.GothamBlack
+			label.Text = ""
+			label.TextColor3 = Color3.new(0, 0, 0)
+			label.TextSize = 13
+			label.TextWrapped = false
+			label.TextTruncate = Enum.TextTruncate.AtEnd
+			label.ZIndex = 3
+			return label
+		end
+		local spinsLine = statusLine(1)
+		local sessionLine = statusLine(2)
+		local totalLine = statusLine(3)
+		local slotLines = { statusLine(4), statusLine(5), statusLine(6), statusLine(7) }
+
+		-- the bloodline's shown name (REALNAME in its game data), e.g. shindaiakuma -> Shindai Akuma
+		local realNames = {}
+		local function realName(internal)
+			if internal == "" then return "-" end
+			if realNames[internal] then return realNames[internal] end
+			local name = internal
+			pcall(function()
+				local data = game:GetService("ReplicatedStorage").alljutsu:FindFirstChild(internal)
+				local value = data and data:FindFirstChild("REALNAME")
+				if value and value.Value ~= "" then name = value.Value end
+			end)
+			realNames[internal] = name
+			return name
+		end
+		local slotPasses = { true, true, player.gamepasses:FindFirstChild("genkai3") ~= nil, player.gamepasses:FindFirstChild("genkai4") ~= nil }
+
+		task.spawn(function()
+			while StatusL.Parent do
+				pcall(function()
+					local used = usedThisSession()
+					spinsLine.Text = "[Spins left: " .. player.statz.spins.Value .. "]"
+					sessionLine.Text = "[This session: " .. used .. " spins]"
+					totalLine.Text = "[Total: " .. (stats.total + used) .. " spins · " .. stats.rollbacks .. " rollbacks]"
+					for slot = 1, 4 do
+						local value = player.statz.main:FindFirstChild("kg" .. slot)
+						if not slotPasses[slot] then
+							slotLines[slot].Text = "[Slot " .. slot .. ": locked]"
+						else
+							local name = value and value.Value or ""
+							slotLines[slot].Text = "[Slot " .. slot .. ": " .. realName(name) .. (name == "RELL" and " ★" or "") .. "]"
+						end
+					end
+				end)
+				task.wait(0.5)
+			end
+		end)
+
 		if game:GetService("Workspace").npc:FindFirstChild("InfSpinRELLBlNPC") then
 			print("Well it's not suggested to execute this script more than once")
 		else
