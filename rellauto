@@ -1,6 +1,7 @@
 -- Qustah Auto Spin RELL Bloodline
--- the raw link of this script (shown on the panel and copied by "Copy Script to Clipboard"): set after upload
-local SCRIPT_URL = ""
+-- the raw link of this script: queued with queue_on_teleport before every rollback, so it starts again by itself
+-- after the rejoin (no autoexec needed)
+local SCRIPT_URL = "https://raw.githubusercontent.com/79650/dg3b2352313124scjd3124sanhgcdsahncdas457hs1amgdcankjcj/refs/heads/main/rellauto"
 
 if game.GameId == 1511883870 then
 	repeat wait() until game:IsLoaded()
@@ -19,7 +20,7 @@ if game.GameId == 1511883870 then
 		game.Workspace:WaitForChild("Camera"):WaitForChild("startup")
 		local spins = player.statz.spins.Value
 
-		--status: spins used this session, and in total over every rollback (kept in Qustah/rellauto.json)
+		--status (and the rollback's queue_on_teleport): spins used this session, and in total over every rollback (kept in Qustah/rellauto.json)
 		local HttpService = game:GetService("HttpService")
 		local STATS_FILE = "Qustah/rellauto.json"
 		local startSpins = player.statz.spins.Value
@@ -45,6 +46,9 @@ if game.GameId == 1511883870 then
 		local function countRollback()
 			if rolledBack then return end
 			rolledBack = true
+			-- this script again in the next server (the rejoin)
+			local queue = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
+			if queue then pcall(queue, "loadstring(game:HttpGet('" .. SCRIPT_URL .. "', true))()") end
 			stats.total = stats.total + usedThisSession()
 			stats.rollbacks = stats.rollbacks + 1
 			saveStats()
@@ -379,101 +383,12 @@ if game.GameId == 1511883870 then
 		end)
 		
 
-		local OurScriptL = Instance.new("ImageLabel")
-		OurScriptL.Name = "OurScriptL"
-		OurScriptL.Parent = ScrollingFrame
-		OurScriptL.BackgroundColor3 = Color3.new(1, 1, 1)
-		OurScriptL.BackgroundTransparency = 1
-		OurScriptL.Position = UDim2.new(0, 0, 0.27, 0)
-		OurScriptL.Size = UDim2.new(0, 230, 0, 30)
-		OurScriptL.Image = "rbxassetid://4823762651"
-		OurScriptL.ImageColor3 = Color3.new(0, 0, 0)
-		OurScriptL.ZIndex = 2
-		
-		local OurScriptLabel = Instance.new("TextLabel")
-		OurScriptLabel.Name = "OurScriptLabel"
-		OurScriptLabel.Parent = OurScriptL
-		OurScriptLabel.BackgroundColor3 = Color3.new(1, 1, 1)
-		OurScriptLabel.BackgroundTransparency = 1
-		OurScriptLabel.Position = UDim2.new(0, 0, 0.1, 0)
-		OurScriptLabel.Size = UDim2.new(0, 250, 0, 20)
-		OurScriptLabel.Font = Enum.Font.GothamBlack
-		OurScriptLabel.Text = "Script"
-		OurScriptLabel.TextColor3 = Color3.new(1, 1, 1)
-		OurScriptLabel.TextSize = 15
-		OurScriptLabel.TextWrapped = false
-		OurScriptLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-		OurScriptLabel.ZIndex = 3
-		
-		local LeScriptL = Instance.new("ImageLabel")
-		LeScriptL.Name = "LeScriptL"
-		LeScriptL.Parent = ScrollingFrame
-		LeScriptL.BackgroundColor3 = Color3.new(1, 1, 1)
-		LeScriptL.BackgroundTransparency = 1
-		LeScriptL.Position = UDim2.new(0, 0, 0.37, 0)
-		LeScriptL.Size = UDim2.new(0, 230, 0, 30)
-		
-		LeScriptL.ImageColor3 = Color3.new(0, 0, 0)
-		LeScriptL.ZIndex = 2
-		
-		local LeScriptLabel = Instance.new("TextLabel")
-		LeScriptLabel.Name = "LeScriptLabel"
-		LeScriptLabel.Parent = LeScriptL
-		LeScriptLabel.BackgroundColor3 = Color3.new(1, 1, 1)
-		LeScriptLabel.BackgroundTransparency = 1
-		LeScriptLabel.Position = UDim2.new(0, 0, 0.1, 0)
-		LeScriptLabel.Size = UDim2.new(0, 250, 0, 20)
-		LeScriptLabel.Font = Enum.Font.GothamBlack
-		LeScriptLabel.Text = "[" .. SCRIPT_URL .. "]"
-		LeScriptLabel.TextColor3 = Color3.new(0, 0, 0)
-		LeScriptLabel.TextSize = 10
-		LeScriptLabel.TextWrapped = false
-		LeScriptLabel.TextStrokeColor3 = Color3.new(0, 0, 0)
-		LeScriptLabel.ZIndex = 3
-		
-		local line1 = Instance.new("TextLabel")
-		line1.Name = "line1"
-		line1.Parent = LeScriptLabel
-		line1.BackgroundColor3 = Color3.new(0, 0, 0)
-		line1.BackgroundTransparency = 0
-		line1.Position = UDim2.new(0.05, 0, 1.6, 0)
-		line1.Size = UDim2.new(0.88, 0, 0.02, 0)
-		line1.Font = Enum.Font.SourceSansBold
-		line1.Text = ""
-		line1.TextColor3 = Color3.new(0, 0, 0)
-		line1.TextScaled = false
-		line1.TextSize = 22
-		line1.TextWrapped = false
-		line1.ZIndex = 2
-		
-		local CSTC = Instance.new("TextButton")
-		CSTC.Name = "CopyScriptToClipboard"
-		CSTC.Parent = ScrollingFrame
-		CSTC.BackgroundColor3 = Color3.new(0.2333333, 0.49, 0)
-		CSTC.BorderColor3 = Color3.new(0,0,0)
-		CSTC.BorderSizePixel = 2
-		CSTC.Position = UDim2.new(0.075, 0, 0.49, 0)
-		CSTC.Size = UDim2.new(0, 200, 0, 20)
-		CSTC.Font = Enum.Font.SourceSansBold
-		CSTC.Text = "Copy Script to Clipboard"
-		CSTC.TextColor3 = Color3.new(1, 1, 1)
-		CSTC.TextSize = 18
-		CSTC.MouseButton1Click:connect(function()
-			CSTC.BackgroundColor3 = Color3.new(0.3, 0.8, 0.3)
-			CSTC.Text = "Script copied to clipboard"
-			wait()
-			setclipboard("loadstring(game:HttpGet('" .. SCRIPT_URL .. "', true))()")
-			wait(1)
-			CSTC.BackgroundColor3 = Color3.new(0.2333333, 0.49, 0)
-			CSTC.Text = "Copy Script to Clipboard"
-		end)
-		
 		local CreditsL = Instance.new("ImageLabel")
 		CreditsL.Name = "CreditsL"
 		CreditsL.Parent = ScrollingFrame
 		CreditsL.BackgroundColor3 = Color3.new(1, 1, 1)
 		CreditsL.BackgroundTransparency = 1
-		CreditsL.Position = UDim2.new(0, 0, 0.58, 0)
+		CreditsL.Position = UDim2.new(0, 0, 0.27, 0)
 		CreditsL.Size = UDim2.new(0, 230, 0, 30)
 		CreditsL.Image = "rbxassetid://4823762651"
 		CreditsL.ImageColor3 = Color3.new(0, 0, 0)
@@ -499,7 +414,7 @@ if game.GameId == 1511883870 then
 		CreditsL1.Parent = ScrollingFrame
 		CreditsL1.BackgroundColor3 = Color3.new(1, 1, 1)
 		CreditsL1.BackgroundTransparency = 1
-		CreditsL1.Position = UDim2.new(0, 0, 0.65, 0)
+		CreditsL1.Position = UDim2.new(0, 0, 0.34, 0)
 		CreditsL1.Size = UDim2.new(0, 230, 0, 30)
 		
 		CreditsL1.ImageColor3 = Color3.new(0, 0, 0)
@@ -540,7 +455,7 @@ if game.GameId == 1511883870 then
 		CreditsL2.Parent = ScrollingFrame
 		CreditsL2.BackgroundColor3 = Color3.new(1, 1, 1)
 		CreditsL2.BackgroundTransparency = 1
-		CreditsL2.Position = UDim2.new(0, 0, 0.71, 0)
+		CreditsL2.Position = UDim2.new(0, 0, 0.40, 0)
 		CreditsL2.Size = UDim2.new(0, 230, 0, 30)
 		
 		CreditsL2.ImageColor3 = Color3.new(0, 0, 0)
@@ -582,7 +497,7 @@ if game.GameId == 1511883870 then
 		CDLTC.BackgroundColor3 = Color3.new(0.2333333, 0.49, 0)
 		CDLTC.BorderColor3 = Color3.new(0,0,0)
 		CDLTC.BorderSizePixel = 2
-		CDLTC.Position = UDim2.new(0.075, 0, 0.81, 0)
+		CDLTC.Position = UDim2.new(0.075, 0, 0.50, 0)
 		CDLTC.Size = UDim2.new(0, 200, 0, 20)
 		CDLTC.Font = Enum.Font.SourceSansBold
 		CDLTC.Text = "Copy Discord Link to Clipboard"
@@ -608,7 +523,11 @@ if game.GameId == 1511883870 then
 				item.Position = UDim2.new(item.Position.X.Scale, item.Position.X.Offset, 0, y + STATUS_HEIGHT)
 			end
 		end
-		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, canvasHeight + STATUS_HEIGHT)
+		local bottom = 0
+		for _, item in ipairs(ScrollingFrame:GetChildren()) do
+			if item:IsA("GuiObject") then bottom = math.max(bottom, item.Position.Y.Offset + item.Size.Y.Offset) end
+		end
+		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, bottom + 10)
 
 		local StatusL = Instance.new("ImageLabel")
 		StatusL.Name = "StatusL"
