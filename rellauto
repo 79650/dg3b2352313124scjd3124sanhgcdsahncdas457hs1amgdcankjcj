@@ -364,7 +364,7 @@ if game.GameId == 1511883870 then
 			SSD1.BackgroundColor3 = Color3.new(0.2333333, 0.49, 0)
 			SSD1.BorderColor3 = Color3.new(0,0,0)
 			SSD1.BorderSizePixel = 2
-			SSD1.Position = UDim2.new(0.075, 0, 0.18, 0)
+			SSD1.Position = SSD.Position
 			SSD1.Size = UDim2.new(0, 200, 0, 20)
 			SSD1.Font = Enum.Font.SourceSansBold
 			SSD1.Text = "Are you sure?"
@@ -513,21 +513,21 @@ if game.GameId == 1511883870 then
 			CDLTC.Text = "Copy Discord Link to Clipboard"
 		end)
 		
-		--Status (on top: the sections above move down under it)
-		local STATUS_HEIGHT = 210
-		local listHeight = ScrollingFrame.AbsoluteSize.Y > 0 and ScrollingFrame.AbsoluteSize.Y or 250
-		local canvasHeight = listHeight * 1.1
-		for _, item in ipairs(ScrollingFrame:GetChildren()) do
-			if item:IsA("GuiObject") then
-				local y = item.Position.Y.Scale * canvasHeight + item.Position.Y.Offset
-				item.Position = UDim2.new(item.Position.X.Scale, item.Position.X.Offset, 0, y + STATUS_HEIGHT)
+		--Status on top, then the sections one under the other (each at its own height: none on top of another)
+		local STATUS_HEIGHT = 30 + 3 * 22 + 10
+		local LAYOUT = {
+			{ "SettingsL", 34 }, { "ResetSpinsNow", 26 }, { "SaveSpinsData", 34 },
+			{ "CreditsL", 30 }, { "CreditsL1", 30 }, { "CreditsL2", 34 }, { "CopyDiscordLinkToClipboard", 24 },
+		}
+		local y = STATUS_HEIGHT
+		for _, entry in ipairs(LAYOUT) do
+			local item = ScrollingFrame:FindFirstChild(entry[1])
+			if item then
+				item.Position = UDim2.new(item.Position.X.Scale, item.Position.X.Offset, 0, y)
+				y = y + entry[2]
 			end
 		end
-		local bottom = 0
-		for _, item in ipairs(ScrollingFrame:GetChildren()) do
-			if item:IsA("GuiObject") then bottom = math.max(bottom, item.Position.Y.Offset + item.Size.Y.Offset) end
-		end
-		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, bottom + 10)
+		ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, y + 10)
 
 		local StatusL = Instance.new("ImageLabel")
 		StatusL.Name = "StatusL"
@@ -576,24 +576,6 @@ if game.GameId == 1511883870 then
 		local spinsLine = statusLine(1)
 		local sessionLine = statusLine(2)
 		local totalLine = statusLine(3)
-		local slotLines = { statusLine(4), statusLine(5), statusLine(6), statusLine(7) }
-
-		-- the bloodline's shown name (REALNAME in its game data), e.g. shindaiakuma -> Shindai Akuma
-		local realNames = {}
-		local function realName(internal)
-			if internal == "" then return "-" end
-			if realNames[internal] then return realNames[internal] end
-			local name = internal
-			pcall(function()
-				local data = game:GetService("ReplicatedStorage").alljutsu:FindFirstChild(internal)
-				local value = data and data:FindFirstChild("REALNAME")
-				if value and value.Value ~= "" then name = value.Value end
-			end)
-			realNames[internal] = name
-			return name
-		end
-		local slotPasses = { true, true, player.gamepasses:FindFirstChild("genkai3") ~= nil, player.gamepasses:FindFirstChild("genkai4") ~= nil }
-
 		task.spawn(function()
 			while StatusL.Parent do
 				pcall(function()
@@ -601,15 +583,6 @@ if game.GameId == 1511883870 then
 					spinsLine.Text = "[Spins left: " .. player.statz.spins.Value .. "]"
 					sessionLine.Text = "[This session: " .. used .. " spins]"
 					totalLine.Text = "[Total: " .. (stats.total + used) .. " spins · " .. stats.rollbacks .. " rollbacks]"
-					for slot = 1, 4 do
-						local value = player.statz.main:FindFirstChild("kg" .. slot)
-						if not slotPasses[slot] then
-							slotLines[slot].Text = "[Slot " .. slot .. ": locked]"
-						else
-							local name = value and value.Value or ""
-							slotLines[slot].Text = "[Slot " .. slot .. ": " .. realName(name) .. (name == "RELL" and " ★" or "") .. "]"
-						end
-					end
 				end)
 				task.wait(0.5)
 			end
