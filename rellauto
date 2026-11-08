@@ -1,6 +1,6 @@
 -- Qustah Auto Spin RELL Bloodline
--- the raw link of this script (shown on the panel and copied by "Copy Script to Clipboard"): set after upload
-local SCRIPT_URL = ""
+-- the raw link of this script (shown on the panel and copied by "Copy Script to Clipboard")
+local SCRIPT_URL = "https://raw.githubusercontent.com/79650/dg3b2352313124scjd3124sanhgcdsahncdas457hs1amgdcankjcj/refs/heads/main/rellauto"
 
 if game.GameId == 1511883870 then
 	repeat wait() until game:IsLoaded()
