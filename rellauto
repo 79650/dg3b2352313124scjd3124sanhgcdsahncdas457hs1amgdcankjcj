@@ -2,6 +2,9 @@
 -- the raw link of this script: queued with queue_on_teleport before every rollback, so it starts again by itself
 -- after the rejoin (no autoexec needed)
 local SCRIPT_URL = "https://raw.githubusercontent.com/79650/dg3b2352313124scjd3124sanhgcdsahncdas457hs1amgdcankjcj/refs/heads/main/rellauto"
+-- Qustah hub ile ortak durum: hub'daki Stop / Spin delay / Re-run after rejoin buradan okunur
+local ENV = (getgenv and getgenv()) or _G
+local STOP_FILE = "QustahShindoRELL.stop"                -- bu dosya varsa sıradaki rejoin'de script açılmaz
 
 if game.GameId == 1511883870 then
 	repeat wait() until game:IsLoaded()
@@ -17,7 +20,21 @@ if game.GameId == 1511883870 then
 	end
 	
 	if game.PlaceId == 4616652839 then
-		game.Workspace:WaitForChild("Camera"):WaitForChild("startup")
+		if ENV.RELLStop then pcall(ENV.RELLStop) end        -- iki kez çalıştırılırsa eskisini durdur (spin döngüleri üst üste binmesin)
+		if ENV.RELL_BOOT_CANCEL then return end
+		pcall(function() if isfile and isfile(STOP_FILE) and delfile then delfile(STOP_FILE) end end)   -- bilerek açıldı
+		ENV.RELL_STOP = false
+		local stopped = false
+		local conns = {}
+		local function onStep(fn)                              -- Stop'a basınca hepsi kopar
+			conns[#conns + 1] = game:GetService('RunService').Stepped:connect(function(...)
+				if not stopped then fn(...) end
+			end)
+		end
+		local cam = game.Workspace:WaitForChild("Camera", 15)
+		if cam then cam:WaitForChild("startup", 15) end
+		if ENV.RELL_BOOT_CANCEL then return end
+		ENV.RELL_RUNNING = true
 		local spins = player.statz.spins.Value
 
 		--status (and the rollback's queue_on_teleport): spins used this session, and in total over every rollback (kept in Qustah/rellauto.json)
@@ -48,14 +65,16 @@ if game.GameId == 1511883870 then
 			rolledBack = true
 			-- this script again in the next server (the rejoin)
 			local queue = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
-			if queue then pcall(queue, "loadstring(game:HttpGet('" .. SCRIPT_URL .. "', true))()") end
+			if queue and not stopped and not ENV.RELL_NOQUEUE then
+				pcall(queue, "if isfile and isfile('" .. STOP_FILE .. "') then return end\nloadstring(game:HttpGet('" .. SCRIPT_URL .. "', true))()")
+			end
 			stats.total = stats.total + usedThisSession()
 			stats.rollbacks = stats.rollbacks + 1
 			saveStats()
 		end
 		
 		--spin slot 1
-		game:GetService('RunService').Stepped:connect(function()
+		onStep(function()
 			if spins > 0 then
 				spins = player.statz.spins.Value
 				kgvalue1 = player.statz.main.kg1.Value
@@ -65,7 +84,7 @@ if game.GameId == 1511883870 then
 				if kgvalue1 ~= "RELL" and kgvalue2 ~= "RELL" and kgvalue3 ~= "RELL" and kgvalue4 ~= "RELL" then
 					player.startevent:FireServer("spin", "kg1")
 					print("Rolled: " .. kgvalue1)
-					wait(1)
+					wait(ENV.RELL_DELAY or 1)
 					kgvalue1 = player.statz.main.kg1.Value
 					kgvalue2 = player.statz.main.kg2.Value
 					kgvalue3 = player.statz.main.kg3.Value
@@ -86,7 +105,7 @@ if game.GameId == 1511883870 then
 		end)
 		
 		--spin slot 2
-		game:GetService('RunService').Stepped:connect(function()
+		onStep(function()
 			if spins > 0 then
 				spins = player.statz.spins.Value
 				kgvalue1 = player.statz.main.kg1.Value
@@ -96,7 +115,7 @@ if game.GameId == 1511883870 then
 				if kgvalue1 ~= "RELL" and kgvalue2 ~= "RELL" and kgvalue3 ~= "RELL" and kgvalue4 ~= "RELL" then
 					player.startevent:FireServer("spin", "kg2")
 					print("Rolled: " .. kgvalue2)
-					wait(1)
+					wait(ENV.RELL_DELAY or 1)
 					kgvalue1 = player.statz.main.kg1.Value
 					kgvalue2 = player.statz.main.kg2.Value
 					kgvalue3 = player.statz.main.kg3.Value
@@ -118,7 +137,7 @@ if game.GameId == 1511883870 then
 		
 		if player.gamepasses:FindFirstChild("genkai3") then
 			--spin slot 3
-			game:GetService('RunService').Stepped:connect(function()
+			onStep(function()
 				if spins > 0 then
 					spins = player.statz.spins.Value
 					kgvalue1 = player.statz.main.kg1.Value
@@ -128,7 +147,7 @@ if game.GameId == 1511883870 then
 					if kgvalue1 ~= "RELL" and kgvalue2 ~= "RELL" and kgvalue3 ~= "RELL" and kgvalue4 ~= "RELL" then
 						player.startevent:FireServer("spin", "kg3")
 						print("Rolled: " .. kgvalue3)
-						wait(1)
+						wait(ENV.RELL_DELAY or 1)
 						kgvalue1 = player.statz.main.kg1.Value
 						kgvalue2 = player.statz.main.kg2.Value
 						kgvalue3 = player.statz.main.kg3.Value
@@ -151,7 +170,7 @@ if game.GameId == 1511883870 then
 		
 		if player.gamepasses:FindFirstChild("genkai4") then
 			--spin slot 4
-			game:GetService('RunService').Stepped:connect(function()
+			onStep(function()
 				if spins > 0 then
 					spins = player.statz.spins.Value
 					kgvalue1 = player.statz.main.kg1.Value
@@ -161,7 +180,7 @@ if game.GameId == 1511883870 then
 					if kgvalue1 ~= "RELL" and kgvalue2 ~= "RELL" and kgvalue3 ~= "RELL" and kgvalue4 ~= "RELL" then
 						player.startevent:FireServer("spin", "kg4")
 						print("Rolled: " .. kgvalue4)
-						wait(1)
+						wait(ENV.RELL_DELAY or 1)
 						kgvalue1 = player.statz.main.kg1.Value
 						kgvalue2 = player.statz.main.kg2.Value
 						kgvalue3 = player.statz.main.kg3.Value
@@ -184,8 +203,17 @@ if game.GameId == 1511883870 then
 		
 		--Properties:
 		local ScreenGui = Instance.new("ScreenGui")
-		--LoadoutChanger.Name = "LoadoutChanger"
+		ScreenGui.Name = "QustahRELL"                          -- hub'daki Stop bu isimle bulur
+		ScreenGui.ResetOnSpawn = false
 		ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+		ENV.RELLStop = function()                              -- hub'daki Stop butonu da bunu çağırır
+			if stopped then return end
+			stopped = true
+			ENV.RELL_RUNNING, ENV.RELL_STOP, ENV.RELLStop = false, true, nil
+			for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+			pcall(function() if writefile then writefile(STOP_FILE, "1") end end)
+			pcall(function() ScreenGui:Destroy() end)
+		end
 		
 		local BLChangerMain = Instance.new("ImageLabel")
 		BLChangerMain.Name = "BLChangerMain"
@@ -613,7 +641,7 @@ if game.GameId == 1511883870 then
 			player.PlayerGui.Main.Customization.CharacterTab.Frame1.beard.Visible = false
 			player.PlayerGui.Main.Customization.CharacterTab.Frame1.face.Visible = false
 			player.PlayerGui.Main.Customization.CharacterTab.Frame2.Visible = false
-			game:GetService('RunService').Stepped:connect(function()
+			onStep(function()
 				for i,v in pairs(player.PlayerGui.Main.Customization.CharacterTab.Frame1:GetChildren()) do
 					if v:FindFirstChild("text") then
 						v.text.Text = "You cannot customize character while inf spin"
