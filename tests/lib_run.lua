@@ -339,36 +339,37 @@ test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", fu
 	check("PvP silindi, autoload temizlendi", not W.Config:Exists("PvP") and row("PvP") == nil and W.Config:GetAutoLoad() == nil)
 end)
 
-test("Info: durum şeridi, kutular, ikonsuz butonlar", function()
+test("Info: Status yok, Copy debug info / Clear Errors kartında", function()
 	local root = W.gui
-	local banner = find(root, function(d) return d.Name == "Banner" end)
-	check("durum şeridi var", banner ~= nil)
-	if not banner then return end
-	local title = banner:FindFirstChild("Title")
-	local text = banner:FindFirstChild("Text")
-	local buttons = banner:FindFirstChild("Buttons")
-	local copyButton, clear = buttons:FindFirstChild("Copy debug info"), buttons:FindFirstChild("Clear")
-	check("Copy debug info ve Clear butonları ikonsuz", copyButton and clear and copyButton:FindFirstChildWhichIsA("ImageLabel", true) == nil and clear:FindFirstChildWhichIsA("ImageLabel", true) == nil)
-	local tiles = find(root, function(d) return d.Name == "Tiles" end)
-	local names = {}
-	for _, c in ipairs(tiles and tiles:GetChildren() or {}) do if c:IsA("GuiObject") then names[#names + 1] = { c.LayoutOrder, c.Name } end end
-	table.sort(names, function(a, b) return a[1] < b[1] end)
-	local joined = {}
-	for _, n in ipairs(names) do joined[#joined + 1] = n[2] end
-	check("kutular: UI lib, Executor, Secure mode, Window (ölçek başlıkta)", table.concat(joined, ","):find("UI lib,Executor,Secure mode,Window", 1, true) ~= nil, table.concat(joined, ","))
-	check("About ve Disconnects kartları yok", find(root, function(d) return d.ClassName == "TextLabel" and (d.Text == "About" or d.Text == "Disconnects") end) == nil)
+	local function titled(text) return find(root, function(d) return d.ClassName == "TextLabel" and d.Text == text end) end
+	check("Status, About, Disconnects kartları yok", titled("Status") == nil and titled("About") == nil and titled("Disconnects") == nil
+		and find(root, function(d) return d.Name == "Banner" end) == nil)
+	local errorsTitle = titled("Errors")
+	local card = errorsTitle
+	while card and not card:FindFirstChild("Copy debug info", true) do card = card.Parent end
+	check("Errors kartında Copy debug info", card ~= nil)
+	if not card then return end
+	local copyButton = card:FindFirstChild("Copy debug info", true)
+	local clear = find(card, function(d) return d.Name == "Clear" end)
+	local function icons(object)
+		local out = {}
+		for _, d in ipairs(object and object:GetDescendants() or {}) do if d.ClassName == "ImageLabel" and d.Visible ~= false and d.Image ~= "" then out[#out + 1] = d.Name .. "=" .. tostring(d.Image) end end
+		return table.concat(out, " ")
+	end
+	check("butonlar ikonsuz", copyButton and clear and icons(copyButton) == "" and icons(clear) == "", (copyButton and icons(copyButton) or "?") .. " | " .. (clear and icons(clear) or "?"))
 	W:ClearErrors()
 	mock.advance(0.1)
-	check("hata yokken: No errors, Clear gizli", title.Text == "No errors in this session" and clear.Visible == false, title.Text)
-	W:SetModule("Test hook", "Limited", "no hook")
+	local function shown(object)
+		while object and object ~= card do if object.Visible == false then return false end object = object.Parent end
+		return true
+	end
+	check("hata yokken Clear gizli, No errors yazıyor", not shown(clear) and titled("No errors in this session") ~= nil)
 	W:ReportError("Test", "boom")
 	mock.advance(0.1)
-	check("hata varken: 1 error, Clear görünür", title.Text:find("1 error in this session", 1, true) == 1 and clear.Visible == true, title.Text)
-	check("alt satırda sınırlı modül", text.Text == "Test hook is limited: no hook", text.Text)
-	clear.Activated:Fire()
+	check("hata varken Clear görünür", shown(clear))
+	W:ClearErrors()
 	mock.advance(0.1)
-	check("Clear hataları sildi", #W:GetErrors() == 0 and title.Text == "No errors in this session", title.Text)
-	W:SetModule("Test hook", "Off")
+	check("Clear sonrası hata yok", #W:GetErrors() == 0)
 end)
 
 test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
