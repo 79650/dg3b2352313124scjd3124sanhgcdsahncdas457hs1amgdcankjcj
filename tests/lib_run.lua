@@ -224,16 +224,29 @@ if ESP then
 	end)
 end
 
-test("Settings: Interface üç kart, profillerde oyun başına seçenek yok", function()
+test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil yok", function()
 	local tab = W:SettingsTab({ Compact = true })
 	mock.advance(0.5)
 	local root = W.main or W.gui
 	local function titled(text) return root and find(root, function(d) return d.ClassName == "TextLabel" and d.Text == text end) end
-	check("Appearance / Window / Behaviour kartları", titled("Appearance") ~= nil and titled("Window") ~= nil and titled("Behaviour") ~= nil)
-	check("eski ayrı kartlar yok (Accent, Layout, Overlays, Theme editor)", titled("Layout") == nil and titled("Theme editor") == nil)
-	check("sekmeler: Theme / Accent / Font, Look / Background / Overlays",
-		root and find(root, function(d) return d.ClassName == "TextButton" and d.Text == "Accent" end) ~= nil
-		and find(root, function(d) return d.ClassName == "TextButton" and d.Text == "Overlays" end) ~= nil)
+	check("Theme / Text / Behaviour / Window kartları", titled("Theme") ~= nil and titled("Text") ~= nil and titled("Behaviour") ~= nil and titled("Window") ~= nil)
+	check("eski kartlar yok (Appearance, Layout, Theme editor)", titled("Appearance") == nil and titled("Layout") == nil and titled("Theme editor") == nil)
+	local gallery = root and find(root, function(d) return d.Name == "ThemeGallery" end)
+	check("tema galerisi var", gallery ~= nil)
+	if gallery then
+		local names = {}
+		for _, c in ipairs(gallery:GetChildren()) do if c.ClassName == "TextButton" then names[#names + 1] = c.Name end end
+		check("5 hazır tema + New", table.concat(names, ",") == "Midnight,Graphite,Glass,OLED,Light,New", table.concat(names, ","))
+		local oled = gallery:FindFirstChild("OLED")
+		oled.Activated:Fire()
+		mock.advance(0.1)
+		check("OLED kutusuna basınca tema OLED", Lib.Flags.__ui_theme == "OLED" and Lib.Theme.pack == "OLED", tostring(Lib.Flags.__ui_theme))
+		local shot = oled:FindFirstChild("Shot")
+		check("kutu temanın kendi rengiyle çizili (OLED siyah)", shot and rgb(shot.BackgroundColor3) == "0,0,0", shot and rgb(shot.BackgroundColor3))
+		W:SetFlag("__ui_theme", "Midnight")
+	end
+	local mouse = titled("Free mouse")
+	check("Free mouse satırında ikon yok", mouse and mouse.Parent and mouse.Parent:FindFirstChildWhichIsA("ImageLabel") == nil)
 	check("oyun başına profil seçeneği yok", titled("Separate profiles per game") == nil and W.Config.SetPerGame == nil)
 end)
 
