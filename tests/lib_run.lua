@@ -371,6 +371,69 @@ test("Info: durum şeridi, kutular, ikonsuz butonlar", function()
 	W:SetModule("Test hook", "Off")
 end)
 
+test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
+	local root = os.getenv("LIB_ROOT")
+	check("LIB_ROOT var", root ~= nil)
+	if not root then return end
+	local function serve(prefix, dir)
+		mock.httpRoutes[prefix] = function(url)
+			local f = assert(io.open(dir .. url:match("([^/]+)$"), "rb"))
+			local body = f:read("a") f:close()
+			return body
+		end
+	end
+	serve("qustah-ui-lib/fonts/files/", root .. "/qustah-ui-lib/fonts/files/")
+	serve("refs/heads/main/qustah/icons/", root .. "/qustah/icons/")
+	serve("qustah-ui-lib/icons/atlas/", root .. "/qustah-ui-lib/icons/atlas/")
+	local oldAsset = getcustomasset
+	getcustomasset = function(path) return "rbxasset://custom/" .. path end
+
+	-- fonts
+	local Fonts = Lib.Fonts
+	check("font listesi: sadece repodaki 5 font", table.concat(Fonts.available(), ",") == "Montserrat,Ubuntu,Work Sans,Josefin Sans,Michroma", table.concat(Fonts.available(), ","))
+	Fonts._resetDownload()
+	Fonts.download()
+	mock.advance(0.5)
+	local ttf = mock.files["QustahUI/fonts/Montserrat-SemiBold.ttf"]
+	check("ttf indirildi ve yazıldı", ttf and ttf:sub(1, 4) == "\0\1\0\0", ttf and #ttf)
+	local json = mock.files["QustahUI/fonts/Montserrat.json"]
+	local data = json and game:GetService("HttpService"):JSONDecode(json)
+	local faces = {}
+	for _, face in ipairs(data and data.faces or {}) do faces[face.weight] = face.assetId end
+	check("font JSON: 400 Regular, 600 SemiBold", faces[400] == "rbxasset://custom/QustahUI/fonts/Montserrat-Regular.ttf" and faces[600] == "rbxasset://custom/QustahUI/fonts/Montserrat-SemiBold.ttf", json)
+	check("Michroma'da SemiBold yok: hepsi Regular", mock.files["QustahUI/fonts/Michroma.json"] and not mock.files["QustahUI/fonts/Michroma.json"]:find("SemiBold", 1, true))
+	check("indirilen aile getcustomasset adresi", Fonts.downloaded.Montserrat == "rbxasset://custom/QustahUI/fonts/Montserrat.json", tostring(Fonts.downloaded.Montserrat))
+	Fonts.set("Ubuntu")
+	mock.advance(0.1)
+	local text = find(W.gui, function(d) return d.ClassName == "TextLabel" and not d:GetAttribute("QCode") and not d:GetAttribute("QFixedFont") end)
+	local family = text and text.FontFace and text.FontFace.args and text.FontFace.args[1]
+	check("yazılar indirilen Ubuntu'da", family == "rbxasset://custom/QustahUI/fonts/Ubuntu.json", tostring(family))
+	Fonts.set("Montserrat")
+	check("Code font seçeneği yok", find(W.gui, function(d) return d.ClassName == "TextLabel" and d.Text == "Code font" end) == nil)
+
+	-- icons: the lib's own sheet (qustah/icons) for its icons, the lucide sheets for the rest
+	Lib.Icons._resetAtlas()
+	-- (the mock's boxes are 100 x 20 on screen: these two say they are 16 px)
+	local house = Lib.Icons.Image("house", { Size = UDim2.fromOffset(16, 16) })
+	house.AbsoluteSize = Vector2.new(16, 16)
+	house.Parent = W.gui
+	mock.advance(0.5)
+	Lib.Icons.Apply(house, "house")
+	check("qustah sayfası indirildi", mock.files["QustahUI/icons/qustah-v10-qustah-v10-1.png"] ~= nil)
+	check("house: qustah sayfasından (16 px)", house.Image == "rbxasset://custom/QustahUI/icons/qustah-v10-qustah-v10-1.png", house.Image)
+	-- house is the 54th name: 16 px row starts at y 326, 56 a row, 18 px apart
+	check("house'un yeri doğru", house.ImageRectOffset == Vector2.new(53 * 18 + 1, 327), tostring(house.ImageRectOffset))
+	local crown = Instance.new("ImageLabel")
+	crown.Size = UDim2.fromOffset(16, 16)
+	crown.AbsoluteSize = Vector2.new(16, 16)
+	crown.Parent = W.gui
+	Lib.Icons.Apply(crown, "crown")
+	mock.advance(0.2)
+	check("sayfada olmayan ikon lucide sayfasından", tostring(crown.Image):find("lucide-16", 1, true) ~= nil, crown.Image)
+	getcustomasset = oldAsset
+	house:Destroy() crown:Destroy()
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}

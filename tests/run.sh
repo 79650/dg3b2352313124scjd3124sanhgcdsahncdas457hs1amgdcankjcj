@@ -34,6 +34,7 @@ done
 [ -n "${BENCH:-}" ] && exit $status
 if [ -n "${LIB_SRC:-}" ] && [ -f "$LIB_SRC" ]; then
   convert "$LIB_SRC" "$TMP/lib53.lua"
+  export LIB_ROOT="$(cd "$(dirname "$LIB_SRC")/../.." && pwd)" # (the repo: fonts and icon sheets are served from it)
   texlua "$HERE/lib_run.lua" "$TMP/lib53.lua" "$TMP/esp53.lua" || status=1
 else
   echo "[lib] skipped: qustah-ui-lib not found (set LIB_SRC)"
