@@ -373,6 +373,7 @@ local ISA = {
 	BasePart = { Part = true, MeshPart = true, UnionOperation = true, SpawnLocation = true, Seat = true, WedgePart = true, TrussPart = true },
 	GuiObject = { Frame = true, TextLabel = true, TextButton = true, TextBox = true, ImageLabel = true, ImageButton = true, ScrollingFrame = true, ViewportFrame = true, CanvasGroup = true },
 	GuiButton = { TextButton = true, ImageButton = true },
+	UIGridStyleLayout = { UIListLayout = true, UIGridLayout = true },
 	GuiBase2d = { Frame = true, TextLabel = true, TextButton = true, TextBox = true, ImageLabel = true, ImageButton = true, ScrollingFrame = true, ScreenGui = true },
 	LayerCollector = { ScreenGui = true, BillboardGui = true, SurfaceGui = true },
 	ValueBase = { StringValue = true, IntValue = true, NumberValue = true, BoolValue = true, ObjectValue = true, Vector3Value = true, CFrameValue = true, Color3Value = true, IntConstrainedValue = true, DoubleConstrainedValue = true },
@@ -993,6 +994,7 @@ queue_on_teleport = function(code) M.queued[#M.queued + 1] = code end
 fireclickdetector = function(cd) M.clicked = (M.clicked or 0) + 1 end
 firetouchinterest = function() end
 identifyexecutor = function() return "Mock", "1.0" end
+getfenv = getfenv or function() return _G end                    -- Luau has it; Lua 5.3 does not
 getexecutorname = identifyexecutor
 request = function() return { StatusCode = 200, Body = "{}" } end
 http_request = request

@@ -224,6 +224,19 @@ if ESP then
 	end)
 end
 
+test("Settings: Interface üç kart, profillerde oyun başına seçenek yok", function()
+	local tab = W:SettingsTab({ Compact = true })
+	mock.advance(0.5)
+	local root = W.main or W.gui
+	local function titled(text) return root and find(root, function(d) return d.ClassName == "TextLabel" and d.Text == text end) end
+	check("Appearance / Window / Behaviour kartları", titled("Appearance") ~= nil and titled("Window") ~= nil and titled("Behaviour") ~= nil)
+	check("eski ayrı kartlar yok (Accent, Layout, Overlays, Theme editor)", titled("Layout") == nil and titled("Theme editor") == nil)
+	check("sekmeler: Theme / Accent / Font, Look / Background / Overlays",
+		root and find(root, function(d) return d.ClassName == "TextButton" and d.Text == "Accent" end) ~= nil
+		and find(root, function(d) return d.ClassName == "TextButton" and d.Text == "Overlays" end) ~= nil)
+	check("oyun başına profil seçeneği yok", titled("Separate profiles per game") == nil and W.Config.SetPerGame == nil)
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}
