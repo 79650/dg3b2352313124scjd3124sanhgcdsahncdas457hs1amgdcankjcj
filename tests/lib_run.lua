@@ -356,7 +356,7 @@ test("Info: durum şeridi, kutular, ikonsuz butonlar", function()
 	local joined = {}
 	for _, n in ipairs(names) do joined[#joined + 1] = n[2] end
 	check("kutular: UI lib, Executor, Secure mode, Window (ölçek başlıkta)", table.concat(joined, ","):find("UI lib,Executor,Secure mode,Window", 1, true) ~= nil, table.concat(joined, ","))
-	check("About kartı yok", find(root, function(d) return d.ClassName == "TextLabel" and d.Text == "About" end) == nil)
+	check("About ve Disconnects kartları yok", find(root, function(d) return d.ClassName == "TextLabel" and (d.Text == "About" or d.Text == "Disconnects") end) == nil)
 	W:ClearErrors()
 	mock.advance(0.1)
 	check("hata yokken: No errors, Clear gizli", title.Text == "No errors in this session" and clear.Visible == false, title.Text)
