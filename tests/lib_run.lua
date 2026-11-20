@@ -250,6 +250,95 @@ test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil 
 	check("oyun başına profil seçeneği yok", titled("Separate profiles per game") == nil and W.Config.SetPerGame == nil)
 end)
 
+test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", function()
+	local root = W.gui
+	local tableFrame = find(root, function(d) return d.Name == "ProfileTable" end)
+	check("profil tablosu var", tableFrame ~= nil)
+	if not tableFrame then return end
+	local head = tableFrame:FindFirstChild("Head")
+	local cols = {}
+	for _, c in ipairs(head:GetChildren()) do if c.ClassName == "TextButton" or c.ClassName == "TextLabel" then cols[#cols + 1] = { c.Position.X.Scale * 100 + c.Position.X.Offset / 1000, c.Name } end end
+	table.sort(cols, function(a, b) return a[1] < b[1] end)
+	local names = {}
+	for _, c in ipairs(cols) do names[#names + 1] = c[2] end
+	check("sütunlar Name, Note, Saved, Settings, Differs, Auto", table.concat(names, ",") == "Name,Note,Saved,Settings,Differs,Auto", table.concat(names, ","))
+	local rows = tableFrame:FindFirstChild("Rows")
+	local function row(name) return rows:FindFirstChild("Profile_" .. name) end
+	local function tags(r)
+		local out = {}
+		local t = r and find(r, function(d) return d.Name == "Tags" end)
+		for _, chip in ipairs(t and t:GetChildren() or {}) do
+			local text = chip:FindFirstChild("Text")
+			if text then out[#out + 1] = text.Text end
+		end
+		return table.concat(out, ",")
+	end
+	check("Default satırı ACTIVE + LOCKED", tags(row("Default")) == "ACTIVE,LOCKED", tags(row("Default")))
+	check("eski kartlar yok (Saved, New profile)", find(root, function(d) return d.Name == "ProfileList" end) == nil)
+
+	-- Create
+	local holder = find(root, function(d) return d.Name == "CreateProfile" end)
+	local box = holder and find(holder, function(d) return d.ClassName == "TextBox" end)
+	local action = holder and find(holder, function(d) return d.Name == "Action" end)
+	check("Create kutusu tablonun altında, Import yanında", holder and holder.Parent and holder.Parent.Name == "Bottom" and holder.Parent:FindFirstChild("ImportProfile") ~= nil)
+	box.Text = "Farm"
+	action.Activated:Fire()
+	mock.advance(0.2)
+	check("Farm oluştu ve satırı var", W.Config:Exists("Farm") and row("Farm") ~= nil)
+	local settingsCell = row("Farm") and row("Farm"):FindFirstChild("Settings")
+	check("Settings sütununda ayar sayısı", settingsCell and tonumber(settingsCell.Text) and tonumber(settingsCell.Text) > 0, settingsCell and settingsCell.Text)
+
+	-- right click menu
+	local function menuItems()
+		local menu = find(W.gui, function(d) return d.Name == "ContextMenu" end)
+		local list = {}
+		for _, c in ipairs(menu and menu:GetChildren() or {}) do if c.ClassName == "TextButton" then list[#list + 1] = c end end
+		table.sort(list, function(a, b) return a.LayoutOrder < b.LayoutOrder end)
+		local out = {}
+		for _, c in ipairs(list) do out[#out + 1] = c.Name end
+		return table.concat(out, ","), menu
+	end
+	row("Default").MouseButton2Click:Fire()
+	mock.advance(0.05)
+	check("Default menüsü: Duplicate, Share code", (menuItems()) == "Duplicate,Share code", (menuItems()))
+	row("Farm").MouseButton2Click:Fire()
+	mock.advance(0.05)
+	local items, menu = menuItems()
+	check("tek menü açık", count(W.gui, function(d) return d.Name == "ContextMenu" end) == 1)
+	check("Farm menüsü: Overwrite, Rename, Edit note, Duplicate, Share code, Delete", items == "Overwrite,Rename,Edit note,Duplicate,Share code,Delete", items)
+	menu:FindFirstChild("Rename").Activated:Fire()
+	mock.advance(0.05)
+	check("menü kapandı", find(W.gui, function(d) return d.Name == "ContextMenu" end) == nil)
+	local dialog = find(W.main, function(d) return d.Name == "Dialog" end)
+	local input = dialog and find(dialog, function(d) return d.Name == "Input" end)
+	check("Rename penceresinde isim kutusu (dolu)", input and input.Text == "Farm", input and input.Text)
+	input.Text = "PvP"
+	find(dialog, function(d) return d.ClassName == "TextButton" and d.Name == "Rename" end).Activated:Fire()
+	mock.advance(0.1)
+	check("Farm → PvP", W.Config:Exists("PvP") and not W.Config:Exists("Farm") and row("PvP") ~= nil and row("Farm") == nil)
+
+	-- sort
+	head:FindFirstChild("Name").Activated:Fire()
+	mock.advance(0.05)
+	local arrow = head:FindFirstChild("Name"):FindFirstChild("Arrow")
+	check("Name'e basınca sıralama oku orada", arrow and arrow.Visible == true)
+
+	-- auto
+	local switch = find(row("PvP"), function(d) return d.Name == "Auto" end)
+	switch.Activated:Fire()
+	mock.advance(0.05)
+	check("Auto anahtarı: PvP başlangıçta yüklenir", W.Config:GetAutoLoad() == "PvP", tostring(W.Config:GetAutoLoad()))
+	check("Default'ta silme ikonu yok", find(row("Default"), function(d) return d.Name == "Delete" end) == nil)
+
+	-- delete icon
+	find(row("PvP"), function(d) return d.Name == "Delete" end).Activated:Fire()
+	mock.advance(0.05)
+	dialog = find(W.main, function(d) return d.Name == "Dialog" end)
+	find(dialog, function(d) return d.ClassName == "TextButton" and d.Name == "Delete" end).Activated:Fire()
+	mock.advance(0.1)
+	check("PvP silindi, autoload temizlendi", not W.Config:Exists("PvP") and row("PvP") == nil and W.Config:GetAutoLoad() == nil)
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}
