@@ -579,6 +579,20 @@ local GUI = { Visible = true, BackgroundTransparency = 0, ZIndex = 1, LayoutOrde
 	Text = "", TextSize = 14, TextColor3 = function() return Color3.new(0, 0, 0) end, TextTransparency = 0, TextStrokeTransparency = 1, Image = "", ImageTransparency = 0, AutomaticSize = nil,
 	ClipsDescendants = false, Active = false, Selectable = false }
 for class in pairs(ISA.GuiObject) do DEFAULTS[class] = GUI end
+-- an image (an icon) sized in pixels is that big on screen, unless a test says otherwise
+for _, class in ipairs({ "ImageLabel", "ImageButton" }) do
+	GETTERS[class] = { AbsoluteSize = function(o)
+		local p = rawprops(o)
+		-- (every gui starts with the 100 x 20 default; anything else was set by a test)
+		local set = p.AbsoluteSize
+		if set and not (set.X == 100 and set.Y == 20) then return set end
+		local size = p.Size
+		-- (rawset(image, "__uiScale", 1.25): drawn inside a 125 % UI scale)
+		local scale = rawget(o, "__uiScale") or 1
+		if size and size.X.Scale == 0 and size.Y.Scale == 0 and size.X.Offset > 0 then return v2(size.X.Offset * scale, size.Y.Offset * scale) end
+		return v2(100, 20)
+	end }
+end
 for _, class in ipairs({ "TextLabel", "TextButton", "TextBox" }) do
 	GETTERS[class] = { TextBounds = function(o) local p = rawprops(o) return v2(#tostring(p.Text or "") * (p.TextSize or 14) * 0.55, p.TextSize or 14) end }
 end

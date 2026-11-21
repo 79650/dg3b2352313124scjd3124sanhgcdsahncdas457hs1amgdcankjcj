@@ -412,27 +412,52 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	Fonts.set("Montserrat")
 	check("Code font seçeneği yok", find(W.gui, function(d) return d.ClassName == "TextLabel" and d.Text == "Code font" end) == nil)
 
-	-- icons: the lib's own sheet (qustah/icons) for its icons, the lucide sheets for the rest
-	Lib.Icons._resetAtlas()
-	-- (the mock's boxes are 100 x 20 on screen: these two say they are 16 px)
-	local house = Lib.Icons.Image("house", { Size = UDim2.fromOffset(16, 16) })
+	-- icons: the lib's own sheet (qustah/icons, filled, 14 - 30 px) for its icons, the lucide sheets for the rest
+	local Icons = Lib.Icons
+	check("ikon boyutlari 14,16,20,24,28,30", table.concat(Icons.Sizes, ",") == "14,16,20,24,28,30")
+	check("fitSize: 10->14, 12->14, 15->16, 18->20, 22->24, 40->30", Icons.fitSize(10) == 14 and Icons.fitSize(12) == 14 and Icons.fitSize(15) == 16
+		and Icons.fitSize(18) == 20 and Icons.fitSize(22) == 24 and Icons.fitSize(40) == 30)
+	Icons._resetAtlas()
+	-- (the mock's boxes are 100 x 20 on screen: these say how big they are)
+	local house = Icons.Image("house", { Size = UDim2.fromOffset(16, 16) })
 	house.AbsoluteSize = Vector2.new(16, 16)
 	house.Parent = W.gui
 	mock.advance(0.5)
-	Lib.Icons.Apply(house, "house")
-	check("qustah sayfası indirildi", mock.files["QustahUI/icons/qustah-v10-qustah-v10-1.png"] ~= nil)
-	check("house: qustah sayfasından (16 px)", house.Image == "rbxasset://custom/QustahUI/icons/qustah-v10-qustah-v10-1.png", house.Image)
-	-- house is the 54th name: 16 px row starts at y 326, 56 a row, 18 px apart
-	check("house'un yeri doğru", house.ImageRectOffset == Vector2.new(53 * 18 + 1, 327), tostring(house.ImageRectOffset))
+	Icons.Apply(house, "house")
+	local page = mock.files["QustahUI/icons/qustah-v11-qustah-v11-1.png"]
+	check("qustah sayfasi indirildi (v11)", page ~= nil)
+	check("house: qustah sayfasindan", tostring(house.Image):find("qustah%-v11") ~= nil, house.Image)
+	check("house 16 px hucre", house.ImageRectSize == Vector2.new(16, 16), tostring(house.ImageRectSize))
+	check("sayfa ikonu Pixelated", house.ResampleMode == Enum.ResamplerMode.Pixelated, tostring(house.ResampleMode))
 	local crown = Instance.new("ImageLabel")
 	crown.Size = UDim2.fromOffset(16, 16)
 	crown.AbsoluteSize = Vector2.new(16, 16)
 	crown.Parent = W.gui
-	Lib.Icons.Apply(crown, "crown")
+	Icons.Apply(crown, "crown")
 	mock.advance(0.2)
-	check("sayfada olmayan ikon lucide sayfasından", tostring(crown.Image):find("lucide-16", 1, true) ~= nil, crown.Image)
+	check("hub ikonu crown da sayfada", tostring(crown.Image):find("qustah%-v11") ~= nil, crown.Image)
+	local anchor = Instance.new("ImageLabel")
+	anchor.Size = UDim2.fromOffset(16, 16)
+	anchor.AbsoluteSize = Vector2.new(16, 16)
+	anchor.Parent = W.gui
+	Icons.Apply(anchor, "anchor")
+	mock.advance(0.2)
+	check("sayfada olmayan ikon lucide sayfasindan, yumusak", tostring(anchor.Image):find("lucide-16", 1, true) ~= nil and anchor.ResampleMode == Enum.ResamplerMode.Default, anchor.Image)
+	-- a size asked for goes to the nearest allowed one, centre kept
+	local holder = Instance.new("Frame")
+	holder.Parent = W.gui
+	local small = Icons.themed(holder, "x", 12, "muted", { AnchorPoint = Vector2.new(0, 0.5), Position = UDim2.new(0, 10, 0.5, 0) })
+	check("12 px istenen ikon 14 px, ortasi ayni", small.Size == UDim2.fromOffset(14, 14) and small.Position == UDim2.new(0, 9, 0.5, 0), small.Size.X.Offset .. " " .. small.Position.X.Offset)
+	-- UI scale 125 %: a 14 px icon would be 17.5 px on screen -> 16 px (16 / 1.25 = 12.8 in the menu)
+	local scaled = Icons.Image("house", { Size = UDim2.fromOffset(14, 14) })
+	rawset(scaled, "__uiScale", 1.25)
+	scaled.Parent = holder
+	Icons.Apply(scaled, "house")
+	mock.advance(0.1)
+	check("%125 olcekte 14 px ikon ekranda 16 px", math.abs(scaled.Size.X.Offset - 12.8) < 0.01, scaled.Size.X.Offset)
+	holder:Destroy() crown:Destroy() anchor:Destroy()
 	getcustomasset = oldAsset
-	house:Destroy() crown:Destroy()
+	house:Destroy()
 end)
 
 test("lib hata kaydı boş", function()
