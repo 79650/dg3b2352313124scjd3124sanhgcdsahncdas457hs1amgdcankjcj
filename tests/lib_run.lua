@@ -525,6 +525,15 @@ test("CreateWindow Defaults ve okunaklı profil dosyası", function()
 	check("yükleyince aynı flag", W.Flags.t_style == "Stripes", tostring(W.Flags.t_style))
 	W:SetFlag("t_style", "Smooth")
 	check("eski ad da okunuyor", W.Config.flagKey("t_style") == "t_style" and W.Config.flagKey("ui accent") == "__ui_accent")
+	-- only what differs from the defaults is written; loading puts everything else back to its default
+	W:SetFlag("t_style", "Smooth")
+	W.Config:Save("plain")
+	local plain
+	for path, body in pairs(mock.files) do if path:find("plain.json", 1, true) then plain = body end end
+	check("varsayılanda olan ayar dosyaya yazılmıyor", plain and not plain:find('"t style"', 1, true), plain and plain:sub(1, 200))
+	W:SetFlag("t_style", "Stripes")
+	W.Config:Load("plain")
+	check("yazılmayan ayar yüklenince varsayılana dönüyor", W.Flags.t_style == "Smooth", tostring(W.Flags.t_style))
 end)
 
 test("lib hata kaydı boş", function()
