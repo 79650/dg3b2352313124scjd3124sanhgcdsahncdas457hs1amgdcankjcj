@@ -460,6 +460,27 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	house:Destroy()
 end)
 
+test("Dock: sağ / alt / kenar çubuğu (Side)", function()
+	local tab = W.Tabs[1]
+	local width = W.width
+	W:SetDockSide("Side")
+	mock.advance(0.1)
+	check("Side: dock pencerenin içinde", W.dock.Parent == W.main, tostring(W.dock.Parent))
+	check("Side: pencere kenar çubuğu kadar genişledi", W.main.Size.X.Offset == width + 132, W.main.Size.X.Offset)
+	check("Side: sayfalar kenar çubuğunun sağında", W.body.Position.X.Offset == 132 and W.body.Size.X.Offset == -132, tostring(W.body.Position))
+	check("Side: sekme adı görünüyor", tab.nameLabel.Visible == true)
+	check("Side: sekme satırı tam genişlik", tab.button.Size.X.Offset == 116, tab.button.Size.X.Offset)
+	check("Side: tutamaç gizli", W.dockGrip.Visible == false)
+	W:SetDockSide("Bottom")
+	mock.advance(0.1)
+	check("Bottom: dock dışarıda", W.dock.Parent == W.dockParent)
+	check("Bottom: sekme adı gizli, yuvarlak buton", tab.nameLabel.Visible == false and tab.button.Size.X.Offset == 30)
+	W:SetDockSide("Right")
+	mock.advance(0.1)
+	check("Right: pencere eski genişlikte, sayfalar solda", W.main.Size.X.Offset == width and W.body.Position.X.Offset == 0)
+	check("Right: tutamaç görünüyor", W.dockGrip.Visible == true)
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}
