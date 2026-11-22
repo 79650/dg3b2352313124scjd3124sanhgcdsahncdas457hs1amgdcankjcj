@@ -482,6 +482,24 @@ test("Dock: sağ / alt / kenar çubuğu (Side)", function()
 	check("Right: tutamaç görünüyor", W.dockGrip.Visible == true)
 end)
 
+test("Yazı genişliği seçili fonta göre ölçülüyor", function()
+	local Util = Lib.Util
+	local base = Util.textWidth("Hello world", 12, Enum.Font.Gotham)
+	check("Util._fontFactor var", type(Util._fontFactor) == "function")
+	local laid = 0
+	local frame = Instance.new("Frame")
+	frame.Parent = W.gui
+	Util.onTextMetrics(frame, function() laid = laid + 1 end)
+	W:SetFlag("__ui_font", "Michroma")
+	mock.advance(0.2)
+	local wide = Util.textWidth("Hello world", 12, Enum.Font.Gotham)
+	check("Michroma: Gotham'dan geniş ölçülüyor", wide > base * 1.05, base .. " -> " .. wide)
+	check("font değişince düzen yenilendi", laid > 0, laid)
+	W:SetFlag("__ui_font", "Montserrat")
+	mock.advance(0.2)
+	frame:Destroy()
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}
