@@ -536,6 +536,20 @@ test("CreateWindow Defaults ve okunaklı profil dosyası", function()
 	check("yazılmayan ayar yüklenince varsayılana dönüyor", W.Flags.t_style == "Smooth", tostring(W.Flags.t_style))
 end)
 
+test("Küçük yazılar okunaklı boyutta çiziliyor", function()
+	local small = Instance.new("TextLabel")
+	small.TextSize = 9
+	small.Parent = W.gui
+	local body = Instance.new("TextLabel")
+	body.TextSize = 11
+	body.Parent = W.gui
+	mock.advance(0.2)
+	check("9 px -> 10 px", small.TextSize == 10, small.TextSize)
+	check("11 px -> 12 px", body.TextSize == 12, body.TextSize)
+	check("genişlik hesabı çizilen boyutla (9 -> 10)", math.abs(Lib.Fonts.widthFactor(Enum.Font.GothamMedium, 9) / Lib.Fonts.widthFactor(Enum.Font.GothamMedium, 10) - (10 / 9) / (11 / 10)) < 0.01)
+	small:Destroy() body:Destroy()
+end)
+
 test("lib hata kaydı boş", function()
 	local errors = W:GetErrors()
 	local text = {}
