@@ -424,9 +424,9 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	house.Parent = W.gui
 	mock.advance(0.5)
 	Icons.Apply(house, "house")
-	local page = mock.files["QustahUI/icons/qustah-v21-qustah-v21-1.png"]
-	check("qustah sayfasi indirildi (v21)", page ~= nil)
-	check("house: qustah sayfasindan", tostring(house.Image):find("qustah%-v21") ~= nil, house.Image)
+	local page = mock.files["QustahUI/icons/qustah-v22-qustah-v22-1.png"]
+	check("qustah sayfasi indirildi (v22)", page ~= nil)
+	check("house: qustah sayfasindan", tostring(house.Image):find("qustah%-v22") ~= nil, house.Image)
 	check("house 16 px hucre", house.ImageRectSize == Vector2.new(16, 16), tostring(house.ImageRectSize))
 	check("sayfa ikonu Pixelated", house.ResampleMode == Enum.ResamplerMode.Pixelated, tostring(house.ResampleMode))
 	local crown = Instance.new("ImageLabel")
@@ -435,7 +435,8 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	crown.Parent = W.gui
 	Icons.Apply(crown, "crown")
 	mock.advance(0.2)
-	check("hub ikonu crown da sayfada", tostring(crown.Image):find("qustah%-v21") ~= nil, crown.Image)
+	check("sadece sayfada olan ikon (frog) bulunuyor", Icons.Get("frog") ~= nil and Icons.Get("record") ~= nil)
+	check("hub ikonu crown da sayfada", tostring(crown.Image):find("qustah%-v22") ~= nil, crown.Image)
 	local anchor = Instance.new("ImageLabel")
 	anchor.Size = UDim2.fromOffset(16, 16)
 	anchor.AbsoluteSize = Vector2.new(16, 16)

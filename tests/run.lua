@@ -168,7 +168,7 @@ if SCENARIO == "map" then
 			Visuals = { "ESP enabled", "Range", "Nearest players", "Name", "Username", "Distance", "Name text size", "Health bar", "Health text",
 				"Health bar segments", "Mode bar", "Mode text", "Mode bar segments",
 				"Chams", "Fullbright", "No fog", "No shadows",
-				"Custom time", "Custom ambient", "Restore lighting" },
+				"Custom time", "Custom ambient" },
 			Player = { "Always run", "NoClip", "Click TP", "Speed", "Count", "FOV", "Unlock zoom", "Anti-AFK", "Spectate", "Disable in combat", "Unbreakable blocks",
 				"NPC Kill Aura", "Scroll snipe", "Teleport to spawn after" },
 			Loadout = { "Element", "Bloodline", "Kenjutsu", "Fighting style", "Change animation", "Buy style", "Refresh lists", "Show code names",
