@@ -513,6 +513,18 @@ test("CreateWindow Defaults ve okunaklı profil dosyası", function()
 	local text = Lib.Util.prettyJSON({ version = 1, flags = { b = 2, a = { "x", "y" } } })
 	check("prettyJSON: sıralı ve girintili", text:find('"a": %["x", "y"%]') ~= nil and text:find("\n  \"flags\"") ~= nil and text:find('"a"') < text:find('"b"'), text)
 	D:Destroy()
+	-- profile files name settings in words; they load back into the same flags
+	W:SetFlag("t_style", "Stripes")
+	local saved = W.Config:Save("words")
+	local file
+	for path, body in pairs(mock.files) do if path:find("words.json", 1, true) then file = body end end
+	check("profil kaydedildi", saved == true and file ~= nil)
+	check("dosyada 't style' (alt çizgisiz)", file and file:find('"t style"', 1, true) ~= nil and not file:find('"t_style"', 1, true), file and file:sub(1, 200))
+	W:SetFlag("t_style", "Smooth")
+	W.Config:Load("words")
+	check("yükleyince aynı flag", W.Flags.t_style == "Stripes", tostring(W.Flags.t_style))
+	W:SetFlag("t_style", "Smooth")
+	check("eski ad da okunuyor", W.Config.flagKey("t_style") == "t_style" and W.Config.flagKey("ui accent") == "__ui_accent")
 end)
 
 test("lib hata kaydı boş", function()
