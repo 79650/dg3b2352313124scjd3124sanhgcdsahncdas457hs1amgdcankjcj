@@ -560,6 +560,17 @@ test("lib hata kaydı boş", function()
 	check("thread hatası yok", #mock.errors == 0, table.concat(co, "\n"))
 end)
 
+test("menü tuşu: oyun tuşu işlemiş olsa da (Shift Lock) menüyü açıp kapatıyor", function()
+	local UIS = game:GetService("UserInputService")
+	local before = W.visible
+	UIS.InputBegan:Fire({ KeyCode = Enum.KeyCode.RightShift, UserInputType = Enum.UserInputType.Keyboard }, true)
+	mock.advance(0.5)
+	check("processed RightShift → Toggle", W.visible ~= before, tostring(W.visible))
+	UIS.InputBegan:Fire({ KeyCode = Enum.KeyCode.RightShift, UserInputType = Enum.UserInputType.Keyboard }, false)
+	mock.advance(0.5)
+	check("ikinci basış geri açıyor", W.visible == before, tostring(W.visible))
+end)
+
 io.write(("[lib] %d geçti, %d kaldı\n"):format(results.pass, results.fail))
 for _, r in ipairs(results.list) do
 	if not r.ok then io.write("  FAIL ", r.name, "\n         ", tostring(r.detail), "\n") end
