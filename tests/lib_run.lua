@@ -590,6 +590,22 @@ test("menü tuşu: oyun tuşu işlemiş olsa da (Shift Lock) menüyü açıp kap
 	check("ikinci basış geri açıyor", W.visible == before, tostring(W.visible))
 end)
 
+test("Sayfa adları başlığın ortasında; kenar çubuğunda Settings sayfaları da başlıkta", function()
+	local settings = W.settingsTab
+	W:SetPageTabs("Header")
+	W:SetDockSide("Side")
+	W:SelectTab(settings)
+	mock.advance(0.3)
+	check("Side: başlıkta Dashboard / Settings düğmesi yok", W.headerTabs.Visible == false)
+	check("Side: Settings sayfaları başlıkta", W.pagesInHeader == true and W.stripHolder.Parent == W.main)
+	check("ortaya hizalı (AnchorPoint 0.5)", W.stripHolder.AnchorPoint.X == 0.5, tostring(W.stripHolder.AnchorPoint.X))
+	W:SetDockSide("Right")
+	mock.advance(0.3)
+	check("Right: Settings sayfaları yine satırda", W.pagesInHeader == false)
+	W:SelectTab(W.Tabs[1])
+	mock.advance(0.1)
+end)
+
 io.write(("[lib] %d geçti, %d kaldı\n"):format(results.pass, results.fail))
 for _, r in ipairs(results.list) do
 	if not r.ok then io.write("  FAIL ", r.name, "\n         ", tostring(r.detail), "\n") end
