@@ -606,6 +606,20 @@ test("Sayfa adları başlığın ortasında; kenar çubuğunda Settings sayfalar
 	mock.advance(0.1)
 end)
 
+test("SetActive: kenar çubuğunda nokta satırın sağ ucunda, dock'ta butonun köşesinde", function()
+	local tab = W.Tabs[1]
+	W:SetDockSide("Side")
+	tab:SetActive(true)
+	mock.advance(0.2)
+	local dot = tab._activeDot
+	check("Side: nokta sağ uçta, ortalı", dot and dot.Visible and dot.AnchorPoint.Y == 0.5 and dot.Position.X.Offset == -12)
+	W:SetDockSide("Right")
+	mock.advance(0.2)
+	check("Right: nokta köşede", dot.AnchorPoint.Y == 1 and dot.Position.X.Offset == -1)
+	tab:SetActive(false)
+	check("SetActive(false) gizliyor", dot.Visible == false)
+end)
+
 io.write(("[lib] %d geçti, %d kaldı\n"):format(results.pass, results.fail))
 for _, r in ipairs(results.list) do
 	if not r.ok then io.write("  FAIL ", r.name, "\n         ", tostring(r.detail), "\n") end
