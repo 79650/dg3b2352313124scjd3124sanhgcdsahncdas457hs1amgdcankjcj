@@ -493,6 +493,19 @@ test("Dock: sağ / alt / kenar çubuğu (Side)", function()
 	check("Right: tutamaç görünüyor", W.dockGrip.Visible == true)
 end)
 
+test("Yazı genişliği fontun kendi harf ölçüleriyle", function()
+	local Fonts, Util = Lib.Fonts, Lib.Util
+	Fonts.set("Montserrat")
+	mock.advance(0.5)
+	local measured = Fonts.textWidth("Saved", 9, Enum.Font.GothamMedium)
+	check("Montserrat harfleri ölçüldü", measured ~= nil)
+	-- drawn at 10 px (9 -> 10): S = 0.68, a v e d = 0.55 each, per px
+	local want = (0.68 + 4 * 0.55) * 10
+	check("Saved: gerçek font genişliği (büyük harf daha geniş)", measured and math.abs(measured - want) < 0.01, tostring(measured) .. " / " .. want)
+	check("Util.textWidth onu kullanıyor", math.abs(Util.textWidth("Saved", 9, Enum.Font.GothamMedium) - (measured or 0)) < 0.01)
+	check("boşluk da sayılıyor", Fonts.textWidth("a a", 12, Enum.Font.Gotham) > Fonts.textWidth("aa", 12, Enum.Font.Gotham))
+end)
+
 test("Yazı genişliği seçili fonta göre ölçülüyor", function()
 	local Util = Lib.Util
 	local base = Util.textWidth("Hello world", 12, Enum.Font.Gotham)
@@ -504,7 +517,8 @@ test("Yazı genişliği seçili fonta göre ölçülüyor", function()
 	W:SetFlag("__ui_font", "Michroma")
 	mock.advance(0.2)
 	local wide = Util.textWidth("Hello world", 12, Enum.Font.Gotham)
-	check("Michroma: Gotham'dan geniş ölçülüyor", wide > base * 1.05, base .. " -> " .. wide)
+	-- (the mock's fonts all measure alike: what changes is Michroma's smaller drawn size, its wide-font fit)
+	check("Michroma: kendi ölçüsüyle", math.abs(wide - base) > 1, base .. " -> " .. wide)
 	check("font değişince düzen yenilendi", laid > 0, laid)
 	W:SetFlag("__ui_font", "Montserrat")
 	mock.advance(0.2)

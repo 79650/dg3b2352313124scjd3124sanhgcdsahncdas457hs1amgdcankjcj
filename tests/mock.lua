@@ -289,7 +289,21 @@ NumberRange = dummyType("NumberRange")
 Rect = dummyType("Rect")
 PhysicalProperties = dummyType("PhysicalProperties")
 Font = dummyType("Font")
-Font.fromEnum = Font.new Font.fromName = Font.new Font.fromId = Font.new
+do
+	-- Family / Weight / Style like Roblox's Font; fromName / fromId / fromEnum give the family paths Roblox uses
+	local new = Font.new
+	local function make(family, weight, style)
+		local face = new(family, weight, style)
+		face.Family = family
+		face.Weight = weight or Enum.FontWeight.Regular
+		face.Style = style or Enum.FontStyle.Normal
+		return face
+	end
+	Font.new = make
+	Font.fromName = function(name, weight, style) return make("rbxasset://fonts/families/" .. name .. ".json", weight, style) end
+	Font.fromId = function(id, weight, style) return make("rbxassetid://" .. tostring(id), weight, style) end
+	Font.fromEnum = function(font) return make("rbxasset://fonts/families/" .. (type(font) == "table" and font.Name or tostring(font)) .. ".json") end
+end
 
 -- Enum
 local EnumItemMT = { __type = "EnumItem" }
@@ -843,7 +857,20 @@ service("ReplicatedStorage") service("CoreGui") service("StarterGui") service("V
 service("GuiService") service("TextService") service("Stats") service("ContentProvider") service("MarketplaceService") service("Teams") service("Debris")
 METHODS.VirtualUser = { CaptureController = function() end, ClickButton2 = function() M.antiAfkClicks = (M.antiAfkClicks or 0) + 1 end, Button2Down = function() end, Button2Up = function() end }
 METHODS.TweenService = { Create = function(_, obj, info, props) return { Play = function() for k, v in pairs(props or {}) do obj[k] = v end end, Cancel = function() end, Pause = function() end, Completed = newSignal() } end }
-METHODS.TextService = { GetTextSize = function(_, text, size) return v2(#text * size * 0.55, size) end }
+METHODS.TextService = {
+	GetTextSize = function(_, text, size) return v2(#text * size * 0.55, size) end,
+	-- (the font's own widths: capitals wider, a lone space trimmed to 0 like Roblox does)
+	GetTextBoundsAsync = function(_, params)
+		local text, size = tostring(params.Text or ""), params.Size or 14
+		if text == " " then return v2(0, size) end
+		local width = 0
+		for i = 1, #text do
+			local c = text:sub(i, i)
+			width = width + (c == " " and 0.3 or c:match("%u") and 0.68 or 0.55)
+		end
+		return v2(width * size, size)
+	end,
+}
 METHODS.StarterGui = { SetCore = function() end, GetCore = function() return nil end, SetCoreGuiEnabled = function() end }
 METHODS.GuiService = { GetGuiInset = function() return v2(0, 36), v2(0, 0) end }
 METHODS.ContentProvider = { PreloadAsync = function() end }
