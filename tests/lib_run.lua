@@ -236,7 +236,7 @@ test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil 
 	if gallery then
 		local names = {}
 		for _, c in ipairs(gallery:GetChildren()) do if c.ClassName == "TextButton" then names[#names + 1] = c.Name end end
-		check("6 hazır tema + New", table.concat(names, ",") == "Charcoal,Charcoal Deep,Charcoal Rose,Forest,Wine,Pastel Night,New", table.concat(names, ","))
+		check("8 hazır tema + New", table.concat(names, ",") == "Charcoal,Charcoal Deep,Charcoal Rose,Ice,Ash,Forest,Wine,Peach,New", table.concat(names, ","))
 		local forest = gallery:FindFirstChild("Forest")
 		forest.Activated:Fire()
 		mock.advance(0.1)
