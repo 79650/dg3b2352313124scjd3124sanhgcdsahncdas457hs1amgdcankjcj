@@ -340,37 +340,34 @@ test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", fu
 	check("PvP silindi, autoload temizlendi", not W.Config:Exists("PvP") and row("PvP") == nil and W.Config:GetAutoLoad() == nil)
 end)
 
-test("Info: Status yok, Copy debug info / Clear Errors kartında", function()
+test("Info: Status yok; Errors kartında kodun başlığında copy + çöp kutusu", function()
 	local root = W.gui
 	local function titled(text) return find(root, function(d) return d.ClassName == "TextLabel" and d.Text == text end) end
 	check("Status, About, Disconnects kartları yok", titled("Status") == nil and titled("About") == nil and titled("Disconnects") == nil
 		and find(root, function(d) return d.Name == "Banner" end) == nil)
-	local errorsTitle = titled("Errors")
-	local card = errorsTitle
-	while card and not card:FindFirstChild("Copy debug info", true) do card = card.Parent end
-	check("Errors kartında Copy debug info", card ~= nil)
+	local card = titled("Errors")
+	while card and not card:FindFirstChild("Clear", true) do card = card.Parent end
+	check("Errors kartında Clear (çöp kutusu)", card ~= nil)
 	if not card then return end
-	local copyButton = card:FindFirstChild("Copy debug info", true)
-	local clear = find(card, function(d) return d.Name == "Clear" end)
-	local function icons(object)
-		local out = {}
-		for _, d in ipairs(object and object:GetDescendants() or {}) do if d.ClassName == "ImageLabel" and d.Visible ~= false and d.Image ~= "" then out[#out + 1] = d.Name .. "=" .. tostring(d.Image) end end
-		return table.concat(out, " ")
-	end
-	check("butonlar ikonsuz", copyButton and clear and icons(copyButton) == "" and icons(clear) == "", (copyButton and icons(copyButton) or "?") .. " | " .. (clear and icons(clear) or "?"))
-	W:ClearErrors()
-	mock.advance(0.1)
-	local function shown(object)
-		while object and object ~= card do if object.Visible == false then return false end object = object.Parent end
-		return true
-	end
-	check("hata yokken Clear gizli, No errors yazıyor", not shown(clear) and titled("No errors in this session") ~= nil)
+	check("eski Copy debug info butonu yok", card:FindFirstChild("Copy debug info", true) == nil)
+	local clear = card:FindFirstChild("Clear", true)
+	local head = clear.Parent
+	local copy = head:FindFirstChild("Copy")
+	check("çöp kutusu copy iconunun yanında (aynı başlıkta, solunda)", copy ~= nil and copy.ClassName == "ImageButton" and clear.Position.X.Offset < copy.Position.X.Offset,
+		tostring(copy and copy.Position) .. " / " .. tostring(clear.Position))
+	-- (the debug info reads these; the mock's game has none)
+	local gameProps = rawget(game, "__p")
+	gameProps.GameId, gameProps.PlaceId, gameProps.JobId = gameProps.GameId or 1234, gameProps.PlaceId or 5678, gameProps.JobId or ""
+	mock.clipboard = nil
 	W:ReportError("Test", "boom")
 	mock.advance(0.1)
-	check("hata varken Clear görünür", shown(clear))
-	W:ClearErrors()
+	copy.Activated:Fire()
+	local copied = mock.clipboard
+	check("copy iconu debug bilgisini kopyalıyor (hatalar dahil)", copied ~= nil and copied:find("executor", 1, true) ~= nil and copied:find("boom", 1, true) ~= nil, tostring(copied))
+	clear.Activated:Fire()
 	mock.advance(0.1)
-	check("Clear sonrası hata yok", #W:GetErrors() == 0)
+	check("çöp kutusu hataları temizliyor", #W:GetErrors() == 0)
+	check("hata yokken No errors yazıyor", titled("No errors in this session") ~= nil)
 end)
 
 test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
