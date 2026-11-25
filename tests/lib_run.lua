@@ -236,7 +236,7 @@ test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil 
 	if gallery then
 		local names = {}
 		for _, c in ipairs(gallery:GetChildren()) do if c.ClassName == "TextButton" then names[#names + 1] = c.Name end end
-		check("5 hazır tema + New", table.concat(names, ",") == "Midnight,Graphite,Glass,OLED,Light,New", table.concat(names, ","))
+		check("11 hazır tema + New", table.concat(names, ",") == "Charcoal,Charcoal Deep,Charcoal Rose,Forest,Wine,Pastel Night,Midnight,Graphite,Glass,OLED,Light,New", table.concat(names, ","))
 		local oled = gallery:FindFirstChild("OLED")
 		oled.Activated:Fire()
 		mock.advance(0.1)
