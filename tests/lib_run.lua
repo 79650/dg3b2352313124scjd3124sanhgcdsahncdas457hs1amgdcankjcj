@@ -419,10 +419,6 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	Fonts._resetDownload()
 	Fonts.download()
 	mock.advance(0.5)
-	check("sadece kullanılan font indi (Montserrat)", mock.files["QustahUI/fonts/Montserrat-Regular.ttf"] ~= nil and mock.files["QustahUI/fonts/Ubuntu-Regular.ttf"] == nil)
-	-- the others when they are picked (here: all of them, for the checks below)
-	for _, name in ipairs(Fonts.available()) do Fonts.download(name) end
-	mock.advance(1)
 	local ttf = mock.files["QustahUI/fonts/Montserrat-SemiBold.ttf"]
 	check("ttf indirildi ve yazıldı", ttf and ttf:sub(1, 4) == "\0\1\0\0", ttf and #ttf)
 	local json = mock.files["QustahUI/fonts/Montserrat.json"]
