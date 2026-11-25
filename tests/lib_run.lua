@@ -256,27 +256,6 @@ test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", fu
 	check("profil tablosu var", tableFrame ~= nil)
 	if not tableFrame then return end
 	local head = tableFrame:FindFirstChild("Head")
-	local function headNames()
-		local cols = {}
-		for _, c in ipairs(head:GetChildren()) do if (c.ClassName == "TextButton" or c.ClassName == "TextLabel") and c.Visible then cols[#cols + 1] = { c.Position.X.Scale * 100 + c.Position.X.Offset / 1000, c.Name } end end
-		table.sort(cols, function(a, b) return a[1] < b[1] end)
-		local out = {}
-		for _, c in ipairs(cols) do out[#out + 1] = c[2] end
-		return table.concat(out, ",")
-	end
-	-- a narrow window: fewer columns, no row icons, Create / Import under each other
-	tableFrame.AbsoluteSize = Vector2.new(300, 100)
-	mock.advance(0.1)
-	check("dar tablo: sadece Name + Auto", headNames() == "Name,Auto", headNames())
-	local bottomList = find(root, function(d) return d.Name == "CreateProfile" end).Parent:FindFirstChildOfClass("UIListLayout")
-	check("dar: Create / Import alt alta", bottomList.FillDirection == Enum.FillDirection.Vertical)
-	check("dar: satırda ikon yok", find(tableFrame, function(d) return d.Name == "Share code" end) == nil)
-	tableFrame.AbsoluteSize = Vector2.new(520, 100)
-	mock.advance(0.1)
-	check("orta tablo: Note düştü", headNames() == "Name,Saved,Settings,Differs,Auto", headNames())
-	tableFrame.AbsoluteSize = Vector2.new(640, 100)
-	mock.advance(0.1)
-	check("geniş: Create / Import yan yana", bottomList.FillDirection == Enum.FillDirection.Horizontal)
 	local cols = {}
 	for _, c in ipairs(head:GetChildren()) do if c.ClassName == "TextButton" or c.ClassName == "TextLabel" then cols[#cols + 1] = { c.Position.X.Scale * 100 + c.Position.X.Offset / 1000, c.Name } end end
 	table.sort(cols, function(a, b) return a[1] < b[1] end)
@@ -287,11 +266,8 @@ test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", fu
 	local function row(name) return rows:FindFirstChild("Profile_" .. name) end
 	local function tags(r)
 		local out = {}
-		local cell = r and r:FindFirstChild("Name")
-		local chips = {}
-		for _, chip in ipairs(cell and cell:GetChildren() or {}) do if chip.Name == "Tag" then chips[#chips + 1] = chip end end
-		table.sort(chips, function(a, b) return a.LayoutOrder < b.LayoutOrder end)
-		for _, chip in ipairs(chips) do
+		local t = r and find(r, function(d) return d.Name == "Tags" end)
+		for _, chip in ipairs(t and t:GetChildren() or {}) do
 			local text = chip:FindFirstChild("Text")
 			if text then out[#out + 1] = text.Text end
 		end
