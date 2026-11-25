@@ -384,7 +384,6 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 		end
 	end
 	serve("refs/heads/main/qustah/icons/", root .. "/qustah/icons/")
-	serve("qustah-ui-lib/icons/atlas/", root .. "/qustah-ui-lib/icons/atlas/")
 	local oldAsset = getcustomasset
 	getcustomasset = function(path) return "rbxasset://custom/" .. path end
 
@@ -404,12 +403,12 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	Fonts.set("Montserrat")
 	check("Code font seçeneği yok", find(W.gui, function(d) return d.ClassName == "TextLabel" and d.Text == "Code font" end) == nil)
 
-	-- icons: the lib's own sheet (qustah/icons, filled, 14 - 30 px) for its icons, the lucide sheets for the rest
+	-- icons: the lib's own sheet (qustah/icons, filled, 14 - 30 px) for its icons, asset ids for the rest
 	local Icons = Lib.Icons
 	check("ikon boyutlari 14,16,20,24,28,30", table.concat(Icons.Sizes, ",") == "14,16,20,24,28,30")
 	check("fitSize: 10->14, 12->14, 15->16, 18->20, 22->24, 40->30", Icons.fitSize(10) == 14 and Icons.fitSize(12) == 14 and Icons.fitSize(15) == 16
 		and Icons.fitSize(18) == 20 and Icons.fitSize(22) == 24 and Icons.fitSize(40) == 30)
-	Icons._resetAtlas()
+	Icons._resetSheets()
 	-- (the mock's boxes are 100 x 20 on screen: these say how big they are)
 	local house = Icons.Image("house", { Size = UDim2.fromOffset(16, 16) })
 	house.AbsoluteSize = Vector2.new(16, 16)
@@ -435,7 +434,14 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	anchor.Parent = W.gui
 	Icons.Apply(anchor, "anchor")
 	mock.advance(0.2)
-	check("sayfada olmayan ikon lucide sayfasindan, yumusak", tostring(anchor.Image):find("lucide-16", 1, true) ~= nil and anchor.ResampleMode == Enum.ResamplerMode.Default, anchor.Image)
+	check("sayfada olmayan ikon: lucide asset id (indirme yok)", tostring(anchor.Image):find("^rbxassetid://") ~= nil, anchor.Image)
+	local fetched = false
+	for path in pairs(mock.files) do if path:find("lucide", 1, true) then fetched = true end end
+	check("lucide sayfası indirilmiyor", not fetched)
+	local own = Instance.new("ImageLabel")
+	own.Parent = W.gui
+	Icons.Apply(own, "rbxassetid://1234567")
+	check("rbxassetid ile kendi ikonu", own.Image == "rbxassetid://1234567", own.Image)
 	-- a size asked for goes to the nearest allowed one, centre kept
 	local holder = Instance.new("Frame")
 	holder.Parent = W.gui
