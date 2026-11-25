@@ -320,8 +320,9 @@ test("Profiles: tablo, sağ tık menüsü, yeniden adlandırma, auto, silme", fu
 	-- sort
 	head:FindFirstChild("Name").Activated:Fire()
 	mock.advance(0.05)
-	local arrow = head:FindFirstChild("Name"):FindFirstChild("Arrow")
-	check("Name'e basınca sıralama oku orada", arrow and arrow.Visible == true)
+	local nameHead = head:FindFirstChild("Name")
+	check("sıralama oku yok", nameHead:FindFirstChild("Arrow") == nil)
+	check("Name'e basınca başlığı accent renginde", nameHead:FindFirstChild("Text").TextColor3 == Lib.Theme.get("accent"))
 
 	-- auto
 	local switch = find(row("PvP"), function(d) return d.Name == "Auto" end)
