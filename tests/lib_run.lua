@@ -383,7 +383,6 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 			return body
 		end
 	end
-	serve("qustah-ui-lib/fonts/files/", root .. "/qustah-ui-lib/fonts/files/")
 	serve("refs/heads/main/qustah/icons/", root .. "/qustah/icons/")
 	serve("qustah-ui-lib/icons/atlas/", root .. "/qustah-ui-lib/icons/atlas/")
 	local oldAsset = getcustomasset
@@ -392,23 +391,16 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 	-- fonts
 	local Fonts = Lib.Fonts
 	check("font listesi: sadece repodaki 5 font", table.concat(Fonts.available(), ",") == "Montserrat,Ubuntu,Work Sans,Josefin Sans,Michroma", table.concat(Fonts.available(), ","))
-	Fonts._resetDownload()
-	Fonts.download()
 	mock.advance(0.5)
-	local ttf = mock.files["QustahUI/fonts/Montserrat-SemiBold.ttf"]
-	check("ttf indirildi ve yazıldı", ttf and ttf:sub(1, 4) == "\0\1\0\0", ttf and #ttf)
-	local json = mock.files["QustahUI/fonts/Montserrat.json"]
-	local data = json and game:GetService("HttpService"):JSONDecode(json)
-	local faces = {}
-	for _, face in ipairs(data and data.faces or {}) do faces[face.weight] = face.assetId end
-	check("font JSON: 400 Regular, 600 SemiBold", faces[400] == "rbxasset://custom/QustahUI/fonts/Montserrat-Regular.ttf" and faces[600] == "rbxasset://custom/QustahUI/fonts/Montserrat-SemiBold.ttf", json)
-	check("Michroma'da SemiBold yok: hepsi Regular", mock.files["QustahUI/fonts/Michroma.json"] and not mock.files["QustahUI/fonts/Michroma.json"]:find("SemiBold", 1, true))
-	check("indirilen aile getcustomasset adresi", Fonts.downloaded.Montserrat == "rbxasset://custom/QustahUI/fonts/Montserrat.json", tostring(Fonts.downloaded.Montserrat))
+	local written = false
+	for path in pairs(mock.files) do if path:find("QustahUI/fonts", 1, true) then written = true end end
+	check("font indirilmiyor (Roblox'un kendi aileleri)", not written)
+	check("Work Sans: rbxassetid", Fonts.family("Work Sans") == "rbxassetid://12187373327", tostring(Fonts.family("Work Sans")))
 	Fonts.set("Ubuntu")
 	mock.advance(0.1)
 	local text = find(W.gui, function(d) return d.ClassName == "TextLabel" and not d:GetAttribute("QCode") and not d:GetAttribute("QFixedFont") end)
 	local family = text and text.FontFace and text.FontFace.args and text.FontFace.args[1]
-	check("yazılar indirilen Ubuntu'da", family == "rbxasset://custom/QustahUI/fonts/Ubuntu.json", tostring(family))
+	check("yazılar Ubuntu'da", family ~= nil and family == Fonts.family("Ubuntu"), tostring(family))
 	Fonts.set("Montserrat")
 	check("Code font seçeneği yok", find(W.gui, function(d) return d.ClassName == "TextLabel" and d.Text == "Code font" end) == nil)
 
