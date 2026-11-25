@@ -236,14 +236,14 @@ test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil 
 	if gallery then
 		local names = {}
 		for _, c in ipairs(gallery:GetChildren()) do if c.ClassName == "TextButton" then names[#names + 1] = c.Name end end
-		check("11 hazır tema + New", table.concat(names, ",") == "Charcoal,Charcoal Deep,Charcoal Rose,Forest,Wine,Pastel Night,Midnight,Graphite,Glass,OLED,Light,New", table.concat(names, ","))
-		local oled = gallery:FindFirstChild("OLED")
-		oled.Activated:Fire()
+		check("6 hazır tema + New", table.concat(names, ",") == "Charcoal,Charcoal Deep,Charcoal Rose,Forest,Wine,Pastel Night,New", table.concat(names, ","))
+		local forest = gallery:FindFirstChild("Forest")
+		forest.Activated:Fire()
 		mock.advance(0.1)
-		check("OLED kutusuna basınca tema OLED", Lib.Flags.__ui_theme == "OLED" and Lib.Theme.pack == "OLED", tostring(Lib.Flags.__ui_theme))
-		local shot = oled:FindFirstChild("Shot")
-		check("kutu temanın kendi rengiyle çizili (OLED siyah)", shot and rgb(shot.BackgroundColor3) == "0,0,0", shot and rgb(shot.BackgroundColor3))
-		W:SetFlag("__ui_theme", "Midnight")
+		check("Forest kutusuna basınca tema Forest", Lib.Flags.__ui_theme == "Forest" and Lib.Theme.pack == "Forest", tostring(Lib.Flags.__ui_theme))
+		local shot = forest:FindFirstChild("Shot")
+		check("kutu temanın kendi rengiyle çizili (Forest koyu yeşil)", shot and rgb(shot.BackgroundColor3) == "20,26,23", shot and rgb(shot.BackgroundColor3))
+		W:SetFlag("__ui_theme", "Charcoal")
 	end
 	local mouse = titled("Free mouse")
 	check("Free mouse satırında ikon yok", mouse and mouse.Parent and mouse.Parent:FindFirstChildWhichIsA("ImageLabel") == nil)
