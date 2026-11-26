@@ -388,7 +388,7 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 
 	-- fonts
 	local Fonts = Lib.Fonts
-	check("font listesi: 5 font + denenen 13", table.concat(Fonts.available(), ",") == "Ubuntu,Jura,Roboto,Michroma,Josefin Sans,Inter,Poppins,Rubik,Mulish,Nunito Sans,Barlow,Rajdhani,Audiowide,Teko,Unica One,Kanit,Silkscreen,Sono Monospace", table.concat(Fonts.available(), ","))
+	check("font listesi: Ubuntu, Jura, Roboto, Michroma, Josefin Sans", table.concat(Fonts.available(), ",") == "Ubuntu,Jura,Roboto,Michroma,Josefin Sans", table.concat(Fonts.available(), ","))
 	check("varsayılan font Ubuntu", Fonts.current == "Ubuntu" and W.Lib.Flags.__ui_font == "Ubuntu", tostring(Fonts.current))
 	mock.advance(0.5)
 	local written = false
