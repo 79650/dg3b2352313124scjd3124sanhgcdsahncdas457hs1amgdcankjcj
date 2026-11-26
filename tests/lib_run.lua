@@ -669,6 +669,34 @@ test("SetActive: kenar çubuğunda nokta satırın sağ ucunda, dock'ta butonun 
 	check("SetActive(false) gizliyor", dot.Visible == false)
 end)
 
+test("Animasyonlar: kayan pill, tik çizimi, ripple, gradient kenar; Settings'ten kapanıyor", function()
+	local card = Page:Card({ Title = "Motion" })
+	local seg = card:Segment({ Title = "Method", Items = { "Resize", "Proxy" }, Style = "Pills" })
+	local slide
+	for _, d in ipairs(card.frame:GetDescendants()) do if d.Name == "Slide" then slide = d end end
+	check("Pills: tek bir kayan pill var", slide ~= nil)
+	seg:Set("Proxy")
+	mock.advance(0.5)
+	check("pill Proxy'nin yerine kaydı", slide and slide.Position.X.Scale == 0.5, slide and tostring(slide.Position.X.Scale))
+	local box = card:Toggle({ Title = "Box", Style = "Check" })
+	box:Set(true)
+	mock.advance(0.5)
+	local tickFrame
+	for _, d in ipairs(card.frame:GetDescendants()) do if d.Name == "Tick" then tickFrame = d end end
+	local full = true
+	for _, part in ipairs(tickFrame:GetChildren()) do if part:IsA("Frame") and part.Size.X.Offset < 4 then full = false end end
+	check("tik çizildi (iki çizgi tam boy)", tickFrame.Visible and full)
+	check("gradient kenar varsayılan açık", W.edgeGradient == true and W.mainStroke:FindFirstChild("EdgeGradient") ~= nil)
+	W:SetEdgeGradient(false)
+	check("gradient kenar kapanıyor", W.mainStroke:FindFirstChild("EdgeGradient") == nil)
+	W:SetEdgeGradient(true)
+	check("Settings: Animations ve Gradient border var", W.flags.__ui_motion ~= nil and W.flags.__ui_edge_gradient ~= nil)
+	W.flags.__ui_motion:Set(false)
+	seg:Set("Resize")
+	check("animasyon kapalı: pill anında yerinde", slide.Position.X.Scale == 0, tostring(slide.Position.X.Scale))
+	W.flags.__ui_motion:Set(true)
+end)
+
 io.write(("[lib] %d geçti, %d kaldı\n"):format(results.pass, results.fail))
 for _, r in ipairs(results.list) do
 	if not r.ok then io.write("  FAIL ", r.name, "\n         ", tostring(r.detail), "\n") end
