@@ -387,18 +387,18 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 
 	-- fonts
 	local Fonts = Lib.Fonts
-	check("font listesi: 5 font + denenen 10 Roblox fontu", table.concat(Fonts.available(), ",") == "Montserrat,Ubuntu,Work Sans,Josefin Sans,Michroma,Builder Sans,Gotham SSm,Roboto,Roboto Condensed,Nunito,Source Sans Pro,Titillium Web,Arimo,Jura,Oswald", table.concat(Fonts.available(), ","))
+	check("font listesi: Ubuntu, Jura, Roboto, Michroma, Josefin Sans", table.concat(Fonts.available(), ",") == "Ubuntu,Jura,Roboto,Michroma,Josefin Sans", table.concat(Fonts.available(), ","))
+	check("varsayılan font Ubuntu", Fonts.current == "Ubuntu" and W.Lib.Flags.__ui_font == "Ubuntu", tostring(Fonts.current))
 	mock.advance(0.5)
 	local written = false
 	for path in pairs(mock.files) do if path:find("QustahUI/fonts", 1, true) then written = true end end
 	check("font indirilmiyor (Roblox'un kendi aileleri)", not written)
-	check("Work Sans: rbxassetid", Fonts.family("Work Sans") == "rbxassetid://12187373327", tostring(Fonts.family("Work Sans")))
+	check("Jura: Roblox'un kendi ailesi", Fonts.family("Jura") == "rbxasset://fonts/families/Jura.json", tostring(Fonts.family("Jura")))
 	Fonts.set("Ubuntu")
 	mock.advance(0.1)
 	local text = find(W.gui, function(d) return d.ClassName == "TextLabel" and not d:GetAttribute("QCode") and not d:GetAttribute("QFixedFont") end)
 	local family = text and text.FontFace and text.FontFace.args and text.FontFace.args[1]
 	check("yazılar Ubuntu'da", family ~= nil and family == Fonts.family("Ubuntu"), tostring(family))
-	Fonts.set("Montserrat")
 	check("Code font seçeneği yok", find(W.gui, function(d) return d.ClassName == "TextLabel" and d.Text == "Code font" end) == nil)
 
 	-- icons: the lib's own sheet (qustah/icons, filled, 14 - 30 px) for its icons, asset ids for the rest
@@ -499,10 +499,10 @@ end)
 
 test("Yazı genişliği fontun kendi harf ölçüleriyle", function()
 	local Fonts, Util = Lib.Fonts, Lib.Util
-	Fonts.set("Montserrat")
+	Fonts.set("Ubuntu")
 	mock.advance(0.5)
 	local measured = Fonts.textWidth("Saved", 9, Enum.Font.GothamMedium)
-	check("Montserrat harfleri ölçüldü", measured ~= nil)
+	check("Ubuntu harfleri ölçüldü", measured ~= nil)
 	-- drawn at 10 px (9 -> 10): S = 0.68, a v e d = 0.55 each, per px
 	local want = (0.68 + 4 * 0.55) * 10
 	check("Saved: gerçek font genişliği (büyük harf daha geniş)", measured and math.abs(measured - want) < 0.01, tostring(measured) .. " / " .. want)
@@ -546,7 +546,23 @@ test("Yazı genişliği seçili fonta göre ölçülüyor", function()
 	-- (the mock's fonts all measure alike: what changes is Michroma's smaller drawn size, its wide-font fit)
 	check("Michroma: kendi ölçüsüyle", math.abs(wide - base) > 1, base .. " -> " .. wide)
 	check("font değişince düzen yenilendi", laid > 0, laid)
-	W:SetFlag("__ui_font", "Montserrat")
+	-- each font picks its text size; one changed by hand stays until the next font
+	W:SetFlag("__ui_font", "Jura")
+	mock.advance(0.1)
+	check("Jura seçince yazı boyutu Large", W.Lib.Flags.__ui_textsize == "Large", tostring(W.Lib.Flags.__ui_textsize))
+	W:SetFlag("__ui_textsize", "Small")
+	mock.advance(0.1)
+	check("elle değiştirilen boyut kalıyor", W.Lib.Flags.__ui_textsize == "Small")
+	W:SetFlag("__ui_font", "Josefin Sans")
+	mock.advance(0.1)
+	check("Josefin Sans seçince Small", W.Lib.Flags.__ui_textsize == "Small")
+	-- a profile that loads a font keeps its own text size
+	W.Config:Apply({ __ui_font = "Jura", __ui_textsize = "Normal" })
+	W.Config:Apply({ __ui_textsize = "Normal", __ui_font = "Roboto" })
+	mock.advance(0.1)
+	check("profil yüklenirken boyut ezilmiyor", W.Lib.Flags.__ui_textsize == "Normal" and Lib.Fonts.current == "Roboto", tostring(W.Lib.Flags.__ui_textsize))
+	W:SetFlag("__ui_font", "Ubuntu")
+	W:SetFlag("__ui_textsize", "Normal")
 	mock.advance(0.2)
 	frame:Destroy()
 end)
