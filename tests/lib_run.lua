@@ -697,6 +697,30 @@ test("Animasyonlar: kayan pill, tik çizimi, ripple, gradient kenar; Settings'te
 	W.flags.__ui_motion:Set(true)
 end)
 
+test("İndirme: ilk adres koparsa sıradaki adresten iner (jsDelivr → raw)", function()
+	local Util = Lib.Util
+	local saved = { writefile, isfile, getcustomasset, makefolder, isfolder, request, http_request }
+	local written, tried = {}, {}
+	request, http_request = nil, nil -- (HttpGet: what the mock routes answer)
+	writefile = function(path, data) written[path] = data end
+	isfile = function(path) return written[path] ~= nil end
+	isfolder = function() return true end
+	makefolder = function() end
+	getcustomasset = function(path) return "rbxasset://custom/" .. path end
+	mock.httpRoutes["https://first.test/"] = function(url) tried[#tried + 1] = url error("Curl error: Recv failure: Connection was reset") end
+	mock.httpRoutes["https://second.test/"] = function(url) tried[#tried + 1] = url return "\137PNG fake" end
+	local ids, failed
+	Util.cacheFiles({ { path = "QustahUI/test/sheet.png", urls = { "https://first.test/sheet.png", "https://second.test/sheet.png" },
+		check = function(body) return body:sub(2, 4) == "PNG" end } }, function(got) ids = got end, function(reason) failed = reason end)
+	mock.advance(1)
+	check("iki adres sırayla denendi", #tried == 2 and tried[1]:find("first", 1, true) and tried[2]:find("second", 1, true), table.concat(tried, ", "))
+	check("ikinci adresten indi ve yazıldı", ids and ids["QustahUI/test/sheet.png"] ~= nil and failed == nil, tostring(failed))
+	check("icon sheet önce jsDelivr'den", type(Lib.Icons.SheetSource) == "table" and Lib.Icons.SheetSource[1]:find("cdn.jsdelivr.net", 1, true) ~= nil
+		and Lib.Icons.SheetSource[2]:find("raw.githubusercontent.com", 1, true) ~= nil)
+	mock.httpRoutes["https://first.test/"], mock.httpRoutes["https://second.test/"] = nil, nil
+	writefile, isfile, getcustomasset, makefolder, isfolder, request, http_request = table.unpack(saved, 1, 7)
+end)
+
 test("Blur game: oyunun GUI'si için arkada karartma, kapanınca gidiyor", function()
 	W:SetBlur(true, 20)
 	mock.advance(0.5)
