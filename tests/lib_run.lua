@@ -510,10 +510,31 @@ test("Yazı genişliği fontun kendi harf ölçüleriyle", function()
 	check("boşluk da sayılıyor", Fonts.textWidth("a a", 12, Enum.Font.Gotham) > Fonts.textWidth("aa", 12, Enum.Font.Gotham))
 end)
 
+test("Transparency bütün pencereye uygulanıyor (en fazla %25)", function()
+	local Theme = Lib.Theme
+	local card, stroke_
+	for object, entry in pairs(Theme._bound()) do
+		if object.Parent and entry.BackgroundColor3 == "card" and object.BackgroundTransparency == 0 and object:IsDescendantOf(W.main) then card = card or object end
+		if object.Parent and object.ClassName == "UIStroke" and entry.Color == "edge" and object:IsDescendantOf(W.main) and object.Transparency == 0 then stroke_ = stroke_ or object end
+	end
+	check("kart ve çerçeve bulundu", card ~= nil and stroke_ ~= nil)
+	W:SetBackgroundTransparency(0.25)
+	check("pencere %25", math.abs(W.main.BackgroundTransparency - 0.25) < 0.001, W.main.BackgroundTransparency)
+	check("kart da %25", card and math.abs(card.BackgroundTransparency - 0.25) < 0.001, card and card.BackgroundTransparency)
+	check("çerçeve de %25", stroke_ and math.abs(stroke_.Transparency - 0.25) < 0.001, stroke_ and stroke_.Transparency)
+	W:SetBackgroundTransparency(0)
+	check("0'da hepsi eski haline", card and card.BackgroundTransparency == 0 and W.main.BackgroundTransparency == 0 and stroke_.Transparency == 0)
+	W:SetFlag("__ui_transparency", 60)
+	mock.advance(0.1)
+	check("slider en fazla 25", (W:GetFlag("__ui_transparency") or 0) <= 25, tostring(W:GetFlag("__ui_transparency")))
+	W:SetFlag("__ui_transparency", 0)
+	mock.advance(0.1)
+end)
+
 test("Yazı genişliği seçili fonta göre ölçülüyor", function()
 	local Util = Lib.Util
 	local base = Util.textWidth("Hello world", 12, Enum.Font.Gotham)
-	check("Util._fontFactor var", type(Util._fontFactor) == "function")
+	check("eski Gotham oran kodu yok", Util._fontFactor == nil and Lib.Fonts.widthFactor == nil and Lib.Fonts.Width == nil and Lib.Fonts.measure == nil)
 	local laid = 0
 	local frame = Instance.new("Frame")
 	frame.Parent = W.gui
@@ -575,7 +596,7 @@ test("Küçük yazılar okunaklı boyutta çiziliyor", function()
 	mock.advance(0.2)
 	check("9 px -> 10 px", small.TextSize == 10, small.TextSize)
 	check("11 px -> 12 px", body.TextSize == 12, body.TextSize)
-	check("genişlik hesabı çizilen boyutla (9 -> 10)", math.abs(Lib.Fonts.widthFactor(Enum.Font.GothamMedium, 9) / Lib.Fonts.widthFactor(Enum.Font.GothamMedium, 10) - (10 / 9) / (11 / 10)) < 0.01)
+	check("genişlik hesabı çizilen boyutla (9 -> 10)", math.abs(Lib.Fonts.drawnScale(9) / Lib.Fonts.drawnScale(10) - (10 / 9) / (11 / 10)) < 0.01)
 	small:Destroy() body:Destroy()
 end)
 
