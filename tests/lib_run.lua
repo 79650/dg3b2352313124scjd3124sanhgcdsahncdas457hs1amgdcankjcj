@@ -697,6 +697,22 @@ test("Animasyonlar: kayan pill, tik çizimi, ripple, gradient kenar; Settings'te
 	W.flags.__ui_motion:Set(true)
 end)
 
+test("Blur game: oyunun GUI'si için arkada karartma, kapanınca gidiyor", function()
+	W:SetBlur(true, 20)
+	mock.advance(0.5)
+	local veil = W.gui:FindFirstChild("BlurVeil")
+	check("karartma var, %40 koyu", veil ~= nil and math.abs(veil.BackgroundTransparency - 0.6) < 0.01, veil and tostring(veil.BackgroundTransparency))
+	check("blur 20", W._blurEffect and W._blurEffect.Size == 20, W._blurEffect and tostring(W._blurEffect.Size))
+	W:SetBlur(false)
+	mock.advance(0.5)
+	check("kapanınca karartma silindi", W.gui:FindFirstChild("BlurVeil") == nil)
+	W:SetBlur(true)
+	mock.advance(0.5)
+	check("tekrar açınca boyut yine 20", W._blurEffect and W._blurEffect.Size == 20, W._blurEffect and tostring(W._blurEffect.Size))
+	W:SetBlur(false)
+	mock.advance(0.5)
+end)
+
 io.write(("[lib] %d geçti, %d kaldı\n"):format(results.pass, results.fail))
 for _, r in ipairs(results.list) do
 	if not r.ok then io.write("  FAIL ", r.name, "\n         ", tostring(r.detail), "\n") end
