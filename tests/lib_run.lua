@@ -388,8 +388,8 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 
 	-- fonts
 	local Fonts = Lib.Fonts
-	check("font listesi: Ubuntu, Jura, Roboto, Michroma, Josefin Sans", table.concat(Fonts.available(), ",") == "Ubuntu,Jura,Roboto,Michroma,Josefin Sans", table.concat(Fonts.available(), ","))
-	check("varsayılan font Ubuntu", Fonts.current == "Ubuntu" and W.Lib.Flags.__ui_font == "Ubuntu", tostring(Fonts.current))
+	check("font listesi: Jura, Ubuntu, Roboto, Michroma, Josefin Sans", table.concat(Fonts.available(), ",") == "Jura,Ubuntu,Roboto,Michroma,Josefin Sans", table.concat(Fonts.available(), ","))
+	check("varsayılan font Jura, yazı boyutu Large", Fonts.current == "Jura" and W.Lib.Flags.__ui_font == "Jura" and W.Lib.Flags.__ui_textsize == "Large", tostring(Fonts.current) .. " " .. tostring(W.Lib.Flags.__ui_textsize))
 	mock.advance(0.5)
 	local written = false
 	for path in pairs(mock.files) do if path:find("QustahUI/fonts", 1, true) then written = true end end
