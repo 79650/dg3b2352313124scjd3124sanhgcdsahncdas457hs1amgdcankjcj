@@ -387,7 +387,7 @@ test("Fontlar ve ikonlar: repodan indirilip getcustomasset ile", function()
 
 	-- fonts
 	local Fonts = Lib.Fonts
-	check("font listesi: sadece repodaki 5 font", table.concat(Fonts.available(), ",") == "Montserrat,Ubuntu,Work Sans,Josefin Sans,Michroma", table.concat(Fonts.available(), ","))
+	check("font listesi: 5 font + denenen 10 Roblox fontu", table.concat(Fonts.available(), ",") == "Montserrat,Ubuntu,Work Sans,Josefin Sans,Michroma,Builder Sans,Gotham SSm,Roboto,Roboto Condensed,Nunito,Source Sans Pro,Titillium Web,Arimo,Jura,Oswald", table.concat(Fonts.available(), ","))
 	mock.advance(0.5)
 	local written = false
 	for path in pairs(mock.files) do if path:find("QustahUI/fonts", 1, true) then written = true end end
