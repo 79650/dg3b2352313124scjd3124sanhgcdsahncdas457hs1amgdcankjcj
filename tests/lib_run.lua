@@ -242,7 +242,7 @@ test("Settings: tema kutuları, Text / Behaviour / Window, oyun başına profil 
 		mock.advance(0.1)
 		check("Forest kutusuna basınca tema Forest", Lib.Flags.__ui_theme == "Forest" and Lib.Theme.pack == "Forest", tostring(Lib.Flags.__ui_theme))
 		local shot = forest:FindFirstChild("Shot")
-		check("kutu temanın kendi rengiyle çizili (Forest koyu yeşil)", shot and rgb(shot.BackgroundColor3) == "20,26,23", shot and rgb(shot.BackgroundColor3))
+		check("kutu temanın kendi rengiyle çizili (Forest koyu yeşil)", shot and rgb(shot.BackgroundColor3) == "34,40,37", shot and rgb(shot.BackgroundColor3))
 		W:SetFlag("__ui_theme", "Charcoal")
 	end
 	local mouse = titled("Free mouse")
